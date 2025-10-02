@@ -32,7 +32,7 @@ export default function handler(req, res) {
           sendResponse(res, 'initial', null);
         }
       });
-      return; // POST के लिए वेट करें
+      return;
     } else {
       action = req.query.action || 'initial';
       choice = req.query.choice;
@@ -68,9 +68,17 @@ function generateFrameHtml(action, choice) {
       <meta property="fc:frame" content="vNext" />
       <meta property="fc:frame:image" content="https://source.unsplash.com/random/400x400/?${result}" />
       <script type="module">
+        // Farcaster SDK लोड करें
         import { sdk } from 'https://files.farcaster.xyz/s/miniapp-sdk.js';
+
+        // DOM लोड होने के बाद ready() कॉल करें
         window.addEventListener('load', async () => {
-          await sdk.actions.ready();
+          try {
+            await sdk.actions.ready();
+            console.log('SDK Ready - Splash Screen Hidden');
+          } catch (error) {
+            console.error('SDK Error:', error);
+          }
         });
       </script>
     `;
@@ -114,9 +122,17 @@ function generateFrameHtml(action, choice) {
       <meta property="fc:frame:button:3" content="Scissors ✂️" />
       <meta property="fc:frame:post_url" content="https://farcaster-game.vercel.app/?action=play&choice=scissors" />
       <script type="module">
+        // Farcaster SDK लोड करें
         import { sdk } from 'https://files.farcaster.xyz/s/miniapp-sdk.js';
+
+        // DOM लोड होने के बाद ready() कॉल करें
         window.addEventListener('load', async () => {
-          await sdk.actions.ready();
+          try {
+            await sdk.actions.ready();
+            console.log('SDK Ready - Splash Screen Hidden');
+          } catch (error) {
+            console.error('SDK Error:', error);
+          }
         });
       </script>
     </head>
@@ -125,3 +141,4 @@ function generateFrameHtml(action, choice) {
     `;
   }
 }
+
