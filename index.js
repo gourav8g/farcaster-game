@@ -126,6 +126,8 @@ function generateFrameHtml(action, choice) {
       <meta property="fc:frame:post_url" content="https://farcaster-game.vercel.app/?action=play&choice=paper" />
       <meta property="fc:frame:button:3" content="Scissors ✂️" />
       <meta property="fc:frame:post_url" content="https://farcaster-game.vercel.app/?action=play&choice=scissors" />
+      <meta property="fc:frame:splashImageUrl" content="https://farcaster-game.vercel.app/splash.png" />
+      <meta property="fc:frame:splashBackgroundColor" content="#FF4500" />
       <script type="module">
         // Farcaster SDK लोड करें
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -147,5 +149,3 @@ function generateFrameHtml(action, choice) {
     `;
   }
 }
-
-
