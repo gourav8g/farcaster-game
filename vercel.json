@@ -8,6 +8,11 @@
   ],
   "routes": [
     {
+      "src": "/.well-known/farcaster.json",
+      "headers": { "Content-Type": "application/json" },
+      "continue": true
+    },
+    {
       "src": "/(.*)",
       "dest": "/index.js"
     }
