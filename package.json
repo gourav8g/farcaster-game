@@ -2,6 +2,7 @@
   "name": "farcaster-game",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",  // यह ES Module के लिए जरूरी है
   "scripts": {
     "start": "node index.js"
   }
