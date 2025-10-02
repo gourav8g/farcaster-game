@@ -47,24 +47,25 @@ export default async function handler(req, res) {
     `;
     res.status(200).send(html);
   } else {
-    const html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta property="fc:frame" content="vNext" />
-      <meta property="fc:frame:image" content="https://source.unsplash.com/random/400x400/?game" />
-      <meta property="fc:frame:title" content="Rock Paper Scissors" />
-      <meta property="fc:frame:description" content="Play & Win $TIBBIR on Base!" />
-      <meta property="fc:frame:button:1" content="Rock 🪨" />
-      <meta property="fc:frame:post_url" content="/play?choice=rock" />
-      <meta property="fc:frame:button:2" content="Paper 📄" />
-      <meta property="fc:frame:post_url" content="/play?choice=paper" />
-      <meta property="fc:frame:button:3" content="Scissors ✂️" />
-      <meta property="fc:frame:post_url" content="/play?choice=scissors" />
-    </head>
-    <body><h1>Play Now!</h1></body>
-    </html>
-    `;
+   const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta property="fc:frame" content="vNext" />
+  <meta property="fc:frame:image" content="https://source.unsplash.com/random/400x400/?game" />
+  <meta property="fc:frame:title" content="Rock Paper Scissors" />
+  <meta property="fc:frame:description" content="Play & Win $TIBBIR on Base!" />
+  <meta property="fc:frame:button:1" content="Rock 🪨" />
+  <meta property="fc:frame:post_url" content="/play?choice=rock" />
+  <meta property="fc:frame:button:2" content="Paper 📄" />
+  <meta property="fc:frame:post_url" content="/play?choice=paper" />
+  <meta property="fc:frame:button:3" content="Scissors ✂️" />
+  <meta property="fc:frame:post_url" content="/play?choice=scissors" />
+</head>
+<body><h1>Play Now!</h1></body>
+</html>
+`;
     res.status(200).send(html);
   }
+
 }
