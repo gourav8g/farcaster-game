@@ -63,23 +63,26 @@ function generateFrameHtml(action, choice) {
 
     let html = `
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
     <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=390, initial-scale=1.0" />
       <meta property="fc:frame" content="vNext" />
       <meta property="fc:frame:image" content="https://source.unsplash.com/random/400x400/?${result}" />
       <script type="module">
         // Farcaster SDK लोड करें
-        import { sdk } from 'https://files.farcaster.xyz/s/miniapp-sdk.js';
+        import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
 
-        // DOM लोड होने के बाद ready() कॉल करें
-        window.addEventListener('load', async () => {
+        // ऐप शुरू होने पर ready() कॉल करें
+        const startApp = async () => {
           try {
-            await sdk.actions.ready();
+            await sdk.actions.ready({ disableNativeGestures: true });
             console.log('SDK Ready - Splash Screen Hidden');
           } catch (error) {
             console.error('SDK Error:', error);
           }
-        });
+        };
+        startApp();
       </script>
     `;
     if (result === 'win') {
@@ -109,8 +112,10 @@ function generateFrameHtml(action, choice) {
   } else {
     return `
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
     <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=390, initial-scale=1.0" />
       <meta property="fc:frame" content="vNext" />
       <meta property="fc:frame:image" content="https://source.unsplash.com/random/400x400/?game" />
       <meta property="fc:frame:title" content="Rock Paper Scissors" />
@@ -123,17 +128,18 @@ function generateFrameHtml(action, choice) {
       <meta property="fc:frame:post_url" content="https://farcaster-game.vercel.app/?action=play&choice=scissors" />
       <script type="module">
         // Farcaster SDK लोड करें
-        import { sdk } from 'https://files.farcaster.xyz/s/miniapp-sdk.js';
+        import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
 
-        // DOM लोड होने के बाद ready() कॉल करें
-        window.addEventListener('load', async () => {
+        // ऐप शुरू होने पर ready() कॉल करें
+        const startApp = async () => {
           try {
-            await sdk.actions.ready();
+            await sdk.actions.ready({ disableNativeGestures: true });
             console.log('SDK Ready - Splash Screen Hidden');
           } catch (error) {
             console.error('SDK Error:', error);
           }
-        });
+        };
+        startApp();
       </script>
     </head>
     <body><h1>Play Now!</h1></body>
@@ -141,4 +147,5 @@ function generateFrameHtml(action, choice) {
     `;
   }
 }
+
 
