@@ -1,15 +1,18 @@
 {
   "accountAssociation": {
-    "header": "eyJ...9xN2YxMTU2NDI1MjRmZTY0MTUyZGU4ZGU1MWU0MThiYjU4ZjVmZmQxYjRjNDBiNGVlZTRhNDcwNmVmNjhlMzQ0ZGQ5MDBkYmQyMmNlMmVlZGY5ZGQ0N2JlNWRmNzMwYzUxNjE4OWVjZDJjY2Y0MDFj",
+    "header": "eyJmaWQiOjIyODk2NSwidHlwZSI6ImN1c3RvZHkiLCJrZXkiOiIweEVCNmJjMDI5N2ZmYjZEZTJFNmZlQzUwRWE5OWNBN2Y2MkZERGY4NTEifQ",
     "payload": "eyJkb21haW4iOiJmYXJjYXN0ZXItZ2FtZS52ZXJjZWwuYXBwIn0",
-    "signature": "MHgxMGQwZGU4ZGYwZDUwZTdmMGIxN2YxMTU2NDI1MjRmZTY0MTUyZGU4ZGU1MWU0MThiYjU4ZjVmZmQxYjRjNDBiNGVlZTRhNDcwNmVmNjhlMzQ0ZGQ5MDBkYmQyMmNlMmVlZGY5ZGQ0N2JlNWRmNzMwYzUxNjE4OWVjZDJjY2Y0MDFj"
+    "signature": "MHhkZWFiZDUwYTQxM2UzODhhMjBkNTcyMmI3ZWRkZTE1MDc1YjJjYmU1N2JiYjUxYjRmZTA3OWEzY2ZlMDNlMmZhMWJmZGQ1ZDA0ZjA1NTA0MTM0MjU2YjdmNGZkNTg2ZThjNjdlZWVjMDhjNzRmZDI3NzMzNjliZGFlYjc0ZmM1YjFi"
   },
-  "miniapp": {
+  "frame": {
     "version": "1",
-    "name": "Rock Paper Scissors Game",
-    "iconUrl": "https://source.unsplash.com/random/100x100/?game",
-    "splashImageUrl": "https://source.unsplash.com/random/400x400/?game",
-    "splashBackgroundColor": "#000000",
-    "home": "https://farcaster-game.vercel.app"
+    "name": "Example Frame",
+    "iconUrl": "https://farcaster-game.vercel.app/icon.png",
+    "homeUrl": "https://farcaster-game.vercel.app",
+    "imageUrl": "https://farcaster-game.vercel.app/image.png",
+    "buttonTitle": "Check this out",
+    "splashImageUrl": "https://farcaster-game.vercel.app/splash.png",
+    "splashBackgroundColor": "#eeccff",
+    "webhookUrl": "https://farcaster-game.vercel.app/api/webhook"
   }
 }
