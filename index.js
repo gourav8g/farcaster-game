@@ -1,6 +1,9 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
+
 const CONTRACT_ADDRESS = '0xA4A2E2ca3fBfE21aed83471D28b6f65A233C6e00'; // $TIBBIR का रियल एड्रेस Basescan से डालें
 const REWARD_AMOUNT = '0.01'; // 1 मिलियन टोकन्स
+const YOUR_WALLET = '0xCBe416312599816b9f897AfC6DDF69C9127bB2D0'; // अपना MetaMask Base एड्रेस यहां डालें
+
 export default async function handler(req, res) {
   // CORS सेट करें (Farcaster के लिए जरूरी)
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -56,7 +59,12 @@ function generateFrameHtml(action, choice) {
     <head>
       <meta property="fc:frame" content="vNext" />
       <meta property="fc:frame:image" content="https://source.unsplash.com/random/400x400/?${result}" />
-      <script src="https://files.farcaster.xyz/s/script.js" defer></script>
+      <script type="module">
+        import { sdk } from 'https://files.farcaster.xyz/s/miniapp-sdk.js';
+        window.addEventListener('load', async () => {
+          await sdk.actions.ready();
+        });
+      </script>
     `;
     if (result === 'win') {
       html += `
@@ -64,16 +72,9 @@ function generateFrameHtml(action, choice) {
       <meta property="fc:frame:description" content="Computer chose ${computerChoice}. Claim 1M $TIBBIR!" />
       <meta property="fc:frame:button:1" content="Claim Reward" />
       <meta property="fc:frame:button:1:action" content="tx" />
-      <meta property="fc:frame:tx" content="https://basescan.org/address/${CONTRACT_ADDRESS}?a=transfer&to=0xCBe416312599816b9f897AfC6DDF69C9127bB2D0&amount=${REWARD_AMOUNT}" />
+      <meta property="fc:frame:tx" content="https://basescan.org/address/${CONTRACT_ADDRESS}?a=transfer&to=${YOUR_WALLET}&amount=${REWARD_AMOUNT}" />
       <meta property="fc:frame:button:2" content="Play Again" />
       <meta property="fc:frame:post_url" content="https://farcaster-game.vercel.app/" />
-      <script>
-        window.onload = () => {
-          if (window.fcWidget) {
-            window.fcWidget.actions.ready();
-          }
-        };
-      </script>
       `;
     } else {
       html += `
@@ -81,13 +82,6 @@ function generateFrameHtml(action, choice) {
       <meta property="fc:frame:description" content="Computer chose ${computerChoice}. Try again!" />
       <meta property="fc:frame:button:1" content="Play Again" />
       <meta property="fc:frame:post_url" content="https://farcaster-game.vercel.app/" />
-      <script>
-        window.onload = () => {
-          if (window.fcWidget) {
-            window.fcWidget.actions.ready();
-          }
-        };
-      </script>
       `;
     }
     html += `
@@ -111,13 +105,11 @@ function generateFrameHtml(action, choice) {
       <meta property="fc:frame:post_url" content="https://farcaster-game.vercel.app/?action=play&choice=paper" />
       <meta property="fc:frame:button:3" content="Scissors ✂️" />
       <meta property="fc:frame:post_url" content="https://farcaster-game.vercel.app/?action=play&choice=scissors" />
-      <script src="https://files.farcaster.xyz/s/script.js" defer></script>
-      <script>
-        window.onload = () => {
-          if (window.fcWidget) {
-            window.fcWidget.actions.ready();
-          }
-        };
+      <script type="module">
+        import { sdk } from 'https://files.farcaster.xyz/s/miniapp-sdk.js';
+        window.addEventListener('load', async () => {
+          await sdk.actions.ready();
+        });
       </script>
     </head>
     <body><h1>Play Now!</h1></body>
