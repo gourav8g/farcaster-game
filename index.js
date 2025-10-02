@@ -1,42 +1,50 @@
-import { VercelRequest, VercelResponse } from '@vercel/node';
-
 const CONTRACT_ADDRESS = '0xA4A2E2ca3fBfE21aed83471D28b6f65A233C6e00'; // $TIBBIR का रियल एड्रेस Basescan से डालें
 const REWARD_AMOUNT = '0.01'; // 1 मिलियन टोकन्स
 const YOUR_WALLET = '0xCBe416312599816b9f897AfC6DDF69C9127bB2D0'; // अपना MetaMask Base एड्रेस यहां डालें
 
-export default async function handler(req, res) {
-  // CORS सेट करें (Farcaster के लिए जरूरी)
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+export default function handler(req, res) {
+  try {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-
-  let action = 'initial';
-  let choice = null;
-
-  if (req.method === 'POST') {
-    try {
-      const rawBody = await new Promise((resolve) => {
-        let body = '';
-        req.on('data', (chunk) => (body += chunk.toString()));
-        req.on('end', () => resolve(body));
-      });
-      const parsedBody = JSON.parse(rawBody);
-      action = parsedBody.untrustedData.button?.index === 1 ? 'play' : 'initial';
-      choice = parsedBody.untrustedData.button?.value || parsedBody.untrustedData.input?.choice;
-    } catch (e) {
-      console.error('Error parsing POST body:', e);
-      action = 'initial'; // डिफॉल्ट पर वापस
+    if (req.method === 'OPTIONS') {
+      res.status(200).end();
+      return;
     }
-  } else {
-    action = req.query.action || 'initial';
-    choice = req.query.choice;
-  }
 
+    let action = 'initial';
+    let choice = null;
+
+    if (req.method === 'POST') {
+      let body = '';
+      req.on('data', (chunk) => {
+        body += chunk.toString();
+      });
+      req.on('end', () => {
+        try {
+          const parsedBody = JSON.parse(body);
+          action = parsedBody.untrustedData?.button?.index === 1 ? 'play' : 'initial';
+          choice = parsedBody.untrustedData?.button?.value || parsedBody.untrustedData?.input?.choice;
+          sendResponse(res, action, choice);
+        } catch (parseError) {
+          console.error('JSON Parse Error:', parseError);
+          sendResponse(res, 'initial', null);
+        }
+      });
+      return; // POST के लिए वेट करें
+    } else {
+      action = req.query.action || 'initial';
+      choice = req.query.choice;
+      sendResponse(res, action, choice);
+    }
+  } catch (error) {
+    console.error('Handler Error:', error);
+    res.status(500).send('Internal Server Error');
+  }
+}
+
+function sendResponse(res, action, choice) {
   const html = generateFrameHtml(action, choice);
   res.status(200).setHeader('Content-Type', 'text/html').send(html);
 }
