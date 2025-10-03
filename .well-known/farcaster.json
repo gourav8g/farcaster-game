@@ -10,7 +10,7 @@
     "iconUrl": "https://farcaster-game.vercel.app/icon.png",
     "homeUrl": "https://farcaster-game.vercel.app",
     "imageUrl": "https://farcaster-game.vercel.app/image.png",
-    "buttonTitle": "Check this out",
+    "buttonTitle": "Play Game",
     "splashImageUrl": "https://farcaster-game.vercel.app/splash.png",
     "splashBackgroundColor": "#eeccff",
     "webhookUrl": "https://farcaster-game.vercel.app/api/webhook"
