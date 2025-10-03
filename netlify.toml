@@ -1,0 +1,10 @@
+[[redirects]]
+  from = "/.well-known/farcaster.json"
+  to = "/.well-known/farcaster.json"
+  status = 200
+  force = true
+
+[[headers]]
+  for = "/.well-known/farcaster.json"
+  [headers.values]
+    Content-Type = "application/json"
