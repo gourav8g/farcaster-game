@@ -17,7 +17,10 @@
     },
     {
       "src": "/.well-known/farcaster.json",
-      "dest": "/.well-known/farcaster.json"
+      "dest": "/.well-known/farcaster.json",
+      "headers": {
+        "Content-Type": "application/json"
+      }
     }
   ]
 }
