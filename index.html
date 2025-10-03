@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=390, initial-scale=1.0" />
+  <title>Rock Paper Scissors Mini App</title>
+  <meta name="fc:miniapp" content='{
+    "version": "1",
+    "imageUrl": "https://source.unsplash.com/random/400x400/?game",
+    "button": {
+      "title": "Play Now",
+      "action": {
+        "type": "launch_frame",
+        "name": "RockPaperScissors",
+        "url": "https://farcaster-game.vercel.app/",
+        "splashImageUrl": "https://farcaster-game.vercel.app/splash.png",
+        "splashBackgroundColor": "#00BFFF"
+      }
+    }
+  }' />
+  <style>
+    body {
+      margin: 0;
+      background: #00BFFF;
+      color: white;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+    }
+    .choice-btn {
+      padding: 10px 20px;
+      margin: 10px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      background: white;
+      color: #00BFFF;
+      border: none;
+      border-radius: 5px;
+    }
+    #result {
+      font-size: 1.5rem;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Rock Paper Scissors</h1>
+  <div id="game">
+    <button class="choice-btn" onclick="makeChoice('rock')">Rock 🪨</button>
+    <button class="choice-btn" onclick="makeChoice('paper')">Paper 📄</button>
+    <button class="choice-btn" onclick="makeChoice('scissors')">Scissors ✂️</button>
+    <div id="result"></div>
+  </div>
+  <script type="module">
+    import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
+
+    let gameState = { choice: null, computerChoice: null, result: null };
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        await sdk.actions.ready();
+        console.log('SDK Ready - Mini App Loaded');
+      } catch (error) {
+        console.error('SDK Error:', error);
+      }
+    });
+
+    async function makeChoice(playerChoice) {
+      gameState.choice = playerChoice;
+      gameState.computerChoice = ['rock', 'paper', 'scissors'][Math.floor(Math.random() * 3)];
+
+      if (playerChoice === gameState.computerChoice) gameState.result = 'tie';
+      else if (
+        (playerChoice === 'rock' && gameState.computerChoice === 'scissors') ||
+        (playerChoice === 'paper' && gameState.computerChoice === 'rock') ||
+        (playerChoice === 'scissors' && gameState.computerChoice === 'paper')
+      ) gameState.result = 'win';
+      else gameState.result = 'lose';
+
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerText = `You chose ${playerChoice}, Computer chose ${gameState.computerChoice}. Result: ${gameState.result}!`;
+
+      if (gameState.result === 'win') {
+        try {
+          const txHash = await sdk.wallet.sendTransaction({
+            to: '0xCBe416312599816b9f897AfC6DDF69C9127bB2D0', // Reward address
+            value: '0.01', // 1M $TIBBIR (adjust unit)
+            chainId: 8453 // Base chain ID
+          });
+          resultDiv.innerText += ` Claimed Reward! TX: ${txHash}`;
+        } catch (error) {
+          console.error('TX Error:', error);
+          resultDiv.innerText += ' Reward claim failed.';
+        }
+      }
+    }
+  </script>
+</body>
+</html>
