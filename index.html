@@ -45,6 +45,20 @@
       font-size: 1.5rem;
       margin-top: 20px;
     }
+    #reward-btn {
+      display: none;
+      padding: 10px 20px;
+      margin-top: 10px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      background: #green;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+    #reward-btn.show {
+      display: block;
+    }
   </style>
 </head>
 <body>
@@ -54,22 +68,31 @@
     <button class="choice-btn" onclick="makeChoice('paper')">Paper 📄</button>
     <button class="choice-btn" onclick="makeChoice('scissors')">Scissors ✂️</button>
     <div id="result"></div>
+    <button id="reward-btn" onclick="claimReward()">Claim Reward</button>
   </div>
   <script type="module">
     import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
 
     let gameState = { choice: null, computerChoice: null, result: null };
+    let isSdkReady = false;
+    const CONTRACT_ADDRESS = '0x99407dc640bdb6853d1c706a7122d85cbffce935'; // Replace with deployed contract address
+    const REWARD_ABI = ["function claimReward()"];
 
     document.addEventListener('DOMContentLoaded', async () => {
       try {
         await sdk.actions.ready();
         console.log('SDK Ready - Mini App Loaded');
+        isSdkReady = true;
       } catch (error) {
         console.error('SDK Error:', error);
       }
     });
 
     async function makeChoice(playerChoice) {
+      if (!isSdkReady) {
+        console.log('SDK not ready yet');
+        return;
+      }
       gameState.choice = playerChoice;
       gameState.computerChoice = ['rock', 'paper', 'scissors'][Math.floor(Math.random() * 3)];
 
@@ -85,17 +108,27 @@
       resultDiv.innerText = `You chose ${playerChoice}, Computer chose ${gameState.computerChoice}. Result: ${gameState.result}!`;
 
       if (gameState.result === 'win') {
-        try {
-          const txHash = await sdk.wallet.sendTransaction({
-            to: '0xCBe416312599816b9f897AfC6DDF69C9127bB2D0', // Reward address
-            value: '0.01', // 1M $TIBBIR (adjust unit)
-            chainId: 8453 // Base chain ID
-          });
-          resultDiv.innerText += ` Claimed Reward! TX: ${txHash}`;
-        } catch (error) {
-          console.error('TX Error:', error);
-          resultDiv.innerText += ' Reward claim failed.';
-        }
+        document.getElementById('reward-btn').classList.add('show');
+      }
+    }
+
+    async function claimReward() {
+      try {
+        const data = sdk.wallet.encodeFunctionData({
+          abi: REWARD_ABI,
+          functionName: 'claimReward'
+        });
+
+        const txHash = await sdk.wallet.sendTransaction({
+          to: CONTRACT_ADDRESS,
+          data: data,
+          chainId: 8453
+        });
+        document.getElementById('reward-btn').classList.remove('show');
+        document.getElementById('result').innerText += ` Claimed 0.01 TIBBIR! TX: ${txHash}`;
+      } catch (error) {
+        console.error('TX Error:', error);
+        document.getElementById('result').innerText += ' Reward claim failed.';
       }
     }
   </script>
