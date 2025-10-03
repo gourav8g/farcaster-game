@@ -1,18 +1,18 @@
 {
   "accountAssociation": {
     "header": "eyJmaWQiOjIyODk2NSwidHlwZSI6ImN1c3RvZHkiLCJrZXkiOiIweEVCNmJjMDI5N2ZmYjZEZTJFNmZlQzUwRWE5OWNBN2Y2MkZERGY4NTEifQ",
-    "payload": "eyJkb21haW4iOiJmYXJjYXN0ZXItZ2FtZS52ZXJjZWwuYXBwIn0",
-    "signature": "MHhkZWFiZDUwYTQxM2UzODhhMjBkNTcyMmI3ZWRkZTE1MDc1YjJjYmU1N2JiYjUxYjRmZTA3OWEzY2ZlMDNlMmZhMWJmZGQ1ZDA0ZjA1NTA0MTM0MjU2YjdmNGZkNTg2ZThjNjdlZWVjMDhjNzRmZDI3NzMzNjliZGFlYjc0ZmM1YjFi"
+    "payload": "eyJkb21haW4iOiJmYXJjYXN0ZXItZ2FtZS1uZXRsaWZ5LmFwcCJ9",
+    "signature": "MHg0YmYxYjcxOTA0ZjgzYzU3M2ZlZmFmYTQ2NGVhZWIwOTgxOTM1NGQ1OTI2ZWRhOWE1ZDY1MTU0N2JjODZmMjZiNmMxZDZkNjc1YWJkOWY1ZGQ1ZjZiYmJhZTdlYjg4OGFiNjEzZjQwMzM2MWE1N2RiMmNjZDUwMmZkOTUxNTNlYzFi"
   },
   "frame": {
     "version": "1",
     "name": "Rock Paper Scissors Game",
-    "iconUrl": "https://farcaster-game.vercel.app/icon.png",
-    "homeUrl": "https://farcaster-game.vercel.app",
-    "imageUrl": "https://farcaster-game.vercel.app/image.png",
+    "iconUrl": "https://farcaster-game-netlify.app/icon.png",
+    "homeUrl": "https://farcaster-game-netlify.app",
+    "imageUrl": "https://farcaster-game-netlify.app/image.png",
     "buttonTitle": "Play Game",
-    "splashImageUrl": "https://farcaster-game.vercel.app/splash.png",
+    "splashImageUrl": "https://farcaster-game-netlify.app/splash.png",
     "splashBackgroundColor": "#eeccff",
-    "webhookUrl": "https://farcaster-game.vercel.app/api/webhook"
+    "webhookUrl": "https://farcaster-game-netlify.app/api/webhook"
   }
 }
