@@ -127,14 +127,16 @@
           throw new Error('Please install MetaMask or connect a wallet.');
         }
 
-        // Get the user's address from Farcaster SDK or MetaMask
-        const recipientAddress = await sdk.wallet.getAddress() || (await window.ethereum.request({ method: 'eth_requestAccounts' }))[0];
+        // Request accounts from MetaMask
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const recipientAddress = accounts[0]; // User's address
 
-        // Encode the claimReward function call (no parameters)
+        // Encode the claimReward function call
         const tx = {
           to: CONTRACT_ADDRESS,
           data: '0x8da5cb5b', // Function selector for claimReward() (no parameters)
-          chainId: 8453 // Base chain
+          chainId: 8453, // Base chain
+          from: recipientAddress // Sender's address
         };
 
         const txHash = await window.ethereum.request({
