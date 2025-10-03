@@ -131,4 +131,3 @@ function generateFrameHtml(action, choice) {
     `;
   }
 }
-
