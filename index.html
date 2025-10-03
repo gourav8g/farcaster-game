@@ -51,7 +51,7 @@
       margin-top: 10px;
       font-size: 1.2rem;
       cursor: pointer;
-      background: #green;
+      background: #28a745; /* Green color for reward button */
       color: white;
       border: none;
       border-radius: 5px;
@@ -64,9 +64,9 @@
 <body>
   <h1>Rock Paper Scissors</h1>
   <div id="game">
-    <button class="choice-btn" onclick="makeChoice('rock')">Rock 🪨</button>
-    <button class="choice-btn" onclick="makeChoice('paper')">Paper 📄</button>
-    <button class="choice-btn" onclick="makeChoice('scissors')">Scissors ✂️</button>
+    <button class="choice-btn" id="rock-btn">Rock 🪨</button>
+    <button class="choice-btn" id="paper-btn">Paper 📄</button>
+    <button class="choice-btn" id="scissors-btn">Scissors ✂️</button>
     <div id="result"></div>
     <button id="reward-btn" onclick="claimReward()">Claim Reward</button>
   </div>
@@ -75,7 +75,7 @@
 
     let gameState = { choice: null, computerChoice: null, result: null };
     let isSdkReady = false;
-    const CONTRACT_ADDRESS = '0x99407dc640bdb6853d1c706a7122d85cbffce935'; // Replace with deployed contract address
+    const CONTRACT_ADDRESS = '0x99407dc640bdb6853d1c706a7122d85cbffce935'; // Replace with your deployed contract address
     const REWARD_ABI = ["function claimReward()"];
 
     document.addEventListener('DOMContentLoaded', async () => {
@@ -83,6 +83,11 @@
         await sdk.actions.ready();
         console.log('SDK Ready - Mini App Loaded');
         isSdkReady = true;
+
+        // Add event listeners for choice buttons
+        document.getElementById('rock-btn').addEventListener('click', () => makeChoice('rock'));
+        document.getElementById('paper-btn').addEventListener('click', () => makeChoice('paper'));
+        document.getElementById('scissors-btn').addEventListener('click', () => makeChoice('scissors'));
       } catch (error) {
         console.error('SDK Error:', error);
       }
@@ -109,6 +114,8 @@
 
       if (gameState.result === 'win') {
         document.getElementById('reward-btn').classList.add('show');
+      } else {
+        document.getElementById('reward-btn').classList.remove('show');
       }
     }
 
