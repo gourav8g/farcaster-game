@@ -7,6 +7,7 @@ export default function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
 
     if (req.method === 'OPTIONS') {
       res.status(200).end();
@@ -46,7 +47,7 @@ export default function handler(req, res) {
 
 function sendResponse(res, action, choice) {
   const html = generateFrameHtml(action, choice);
-  res.status(200).setHeader('Content-Type', 'text/html').send(html);
+  res.status(200).send(html);
 }
 
 function generateFrameHtml(action, choice) {
@@ -67,27 +68,25 @@ function generateFrameHtml(action, choice) {
     <head>
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=390, initial-scale=1.0" />
-      <title>Rock Paper Scissors Game</title>
       <meta property="fc:frame" content="vNext" />
       <meta property="fc:frame:image" content="https://source.unsplash.com/random/400x400/?${result}" />
-      <meta property="fc:frame:title" content="${result.charAt(0).toUpperCase() + result.slice(1)}! 🎮" />
+      <meta property="fc:frame:title" content="${result.charAt(0).toUpperCase() + result.slice(1)}!" />
       <meta property="fc:frame:description" content="Computer chose ${computerChoice}. Try again!" />
       <meta property="fc:frame:button:1" content="Play Again" />
       <meta property="fc:frame:post_url" content="https://farcaster-game.vercel.app/" />
       <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
-        const startApp = async () => {
+        document.addEventListener('DOMContentLoaded', async () => {
           try {
-            await sdk.actions.ready({ disableNativeGestures: true });
-            console.log('SDK Ready - Splash Screen Hidden');
+            await sdk.actions.ready();
+            console.log('SDK Ready - Frame Loaded');
           } catch (error) {
             console.error('SDK Error:', error);
           }
-        };
-        startApp();
+        });
       </script>
     </head>
-    <body style="margin: 0; background: #00BFFF; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; text-align: center;">
+    <body style="margin: 0; background: #00BFFF; color: white; font-family: sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; text-align: center;">
       <h1>${result.toUpperCase()}</h1>
     </body>
     </html>
@@ -100,11 +99,10 @@ function generateFrameHtml(action, choice) {
     <head>
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=390, initial-scale=1.0" />
-      <title>Rock Paper Scissors Game</title>
       <meta property="fc:frame" content="vNext" />
       <meta property="fc:frame:image" content="https://source.unsplash.com/random/400x400/?game" />
-      <meta property="fc:frame:title" content="Rock Paper Scissors 🎮" />
-      <meta property="fc:frame:description" content="Play & Win $TIBBIR on Base! Choose your move." />
+      <meta property="fc:frame:title" content="Rock Paper Scissors" />
+      <meta property="fc:frame:description" content="Play & Win $TIBBIR on Base!" />
       <meta property="fc:frame:button:1" content="Rock 🪨" />
       <meta property="fc:frame:post_url" content="https://farcaster-game.vercel.app/?action=play&choice=rock" />
       <meta property="fc:frame:button:2" content="Paper 📄" />
@@ -113,18 +111,17 @@ function generateFrameHtml(action, choice) {
       <meta property="fc:frame:post_url" content="https://farcaster-game.vercel.app/?action=play&choice=scissors" />
       <script type="module">
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
-        const startApp = async () => {
+        document.addEventListener('DOMContentLoaded', async () => {
           try {
-            await sdk.actions.ready({ disableNativeGestures: true });
-            console.log('SDK Ready - Splash Screen Hidden');
+            await sdk.actions.ready();
+            console.log('SDK Ready - Frame Loaded');
           } catch (error) {
             console.error('SDK Error:', error);
           }
-        };
-        startApp();
+        });
       </script>
     </head>
-    <body style="margin: 0; background: #00BFFF; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; text-align: center;">
+    <body style="margin: 0; background: #00BFFF; color: white; font-family: sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; text-align: center;">
       <h1>Play Now!</h1>
     </body>
     </html>
