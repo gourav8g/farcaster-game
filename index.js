@@ -1,4 +1,4 @@
-const CONTRACT_ADDRESS = '0xA4A2E2ca3fBfE21aed83471D28b6f65A233C6e00'; // $TIBBIR Contract
+const CONTRACT_ADDRESS = '0xA4A2E2ca3fBfE21aed83471D28b6f65A233C6e00'; 
 const REWARD_AMOUNT = '0.01'; 
 const YOUR_WALLET = '0xCBe416312599816b9f897AfC6DDF69C9127bB2D0';
 
@@ -74,11 +74,11 @@ function generateFrameHtml(action, choice) {
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=390, initial-scale=1.0" />
       <meta name="fc:frame" content="vNext" />
-      <meta name="fc:frame:image" content="https://source.unsplash.com/random/400x400/?${result}" />
+      <meta name="fc:frame:image" content="https://farcaster-game.vercel.app/splash.png" />
       <meta name="fc:frame:button:1" content="Play Again" />
       <meta name="fc:frame:post_url" content="https://farcaster-game.vercel.app/" />
     </head>
-    <body style="margin: 0; background: #00BFFF; color: white; font-family: sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; text-align: center;">
+    <body style="margin:0; background:#00BFFF; color:white; font-family:sans-serif; display:flex; align-items:center; justify-content:center; min-height:100vh; text-align:center;">
       <h1>${result.toUpperCase()} (You: ${choice}, Computer: ${computerChoice})</h1>
     </body>
     </html>
@@ -91,13 +91,13 @@ function generateFrameHtml(action, choice) {
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=390, initial-scale=1.0" />
       <meta name="fc:frame" content="vNext" />
-      <meta name="fc:frame:image" content="https://source.unsplash.com/random/400x400/?game" />
+      <meta name="fc:frame:image" content="https://farcaster-game.vercel.app/splash.png" />
       <meta name="fc:frame:button:1" content="Rock 🪨" />
       <meta name="fc:frame:button:2" content="Paper 📄" />
       <meta name="fc:frame:button:3" content="Scissors ✂️" />
       <meta name="fc:frame:post_url" content="https://farcaster-game.vercel.app/" />
     </head>
-    <body style="margin: 0; background: #00BFFF; color: white; font-family: sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; text-align: center;">
+    <body style="margin:0; background:#00BFFF; color:white; font-family:sans-serif; display:flex; align-items:center; justify-content:center; min-height:100vh; text-align:center;">
       <h1>Play Rock Paper Scissors!</h1>
     </body>
     </html>
