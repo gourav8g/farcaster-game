@@ -68,7 +68,7 @@
     <button class="choice-btn" id="paper-btn">Paper 📄</button>
     <button class="choice-btn" id="scissors-btn">Scissors ✂️</button>
     <div id="result"></div>
-    <button id="reward-btn" onclick="claimReward()">Claim Reward</button>
+    <button id="reward-btn">Claim Reward</button> <!-- Removed onclick -->
   </div>
   <script type="module">
     import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
@@ -88,6 +88,9 @@
         document.getElementById('rock-btn').addEventListener('click', () => makeChoice('rock'));
         document.getElementById('paper-btn').addEventListener('click', () => makeChoice('paper'));
         document.getElementById('scissors-btn').addEventListener('click', () => makeChoice('scissors'));
+
+        // Add event listener for reward button
+        document.getElementById('reward-btn').addEventListener('click', claimReward);
       } catch (error) {
         console.error('SDK Error:', error);
       }
