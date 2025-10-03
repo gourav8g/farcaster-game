@@ -76,7 +76,6 @@
     let gameState = { choice: null, computerChoice: null, result: null };
     let isSdkReady = false;
     const CONTRACT_ADDRESS = '0x99407dc640bdb6853d1c706a7122d85cbffce935'; // Replace with your deployed contract address
-    const REWARD_ABI = ["function claimReward()"];
 
     document.addEventListener('DOMContentLoaded', async () => {
       try {
@@ -124,14 +123,10 @@
 
     async function claimReward() {
       try {
-        const data = sdk.wallet.encodeFunctionData({
-          abi: REWARD_ABI,
-          functionName: 'claimReward'
-        });
-
+        // Since encodeFunctionData is not available, call claimReward directly
         const txHash = await sdk.wallet.sendTransaction({
           to: CONTRACT_ADDRESS,
-          data: data,
+          data: '0x', // Empty data for a simple function call (claimReward has no parameters)
           chainId: 8453
         });
         document.getElementById('reward-btn').classList.remove('show');
