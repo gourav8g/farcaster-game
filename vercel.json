@@ -2,25 +2,22 @@
   "version": 2,
   "builds": [
     {
-      "src": "index.html",
+      "src": "public/index.html",
       "use": "@vercel/static"
     },
     {
-      "src": "*.json",
+      "src": "public/*.json",
       "use": "@vercel/static"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "/public/index.html"
     },
     {
       "src": "/.well-known/farcaster.json",
-      "dest": "/.well-known/farcaster.json",
-      "headers": {
-        "Content-Type": "application/json"
-      }
+      "dest": "/public/.well-known/farcaster.json"
     }
   ]
 }
