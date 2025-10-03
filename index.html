@@ -76,6 +76,7 @@
     let gameState = { choice: null, computerChoice: null, result: null };
     let isSdkReady = false;
     const CONTRACT_ADDRESS = '0x99407dc640bdb6853d1c706a7122d85cbffce935'; // Replace with your deployed contract address
+    const BASE_CHAIN_ID = '0x2131'; // Hex for 8453 (Base chain)
 
     document.addEventListener('DOMContentLoaded', async () => {
       try {
@@ -127,6 +128,13 @@
           throw new Error('Please install MetaMask or connect a wallet.');
         }
 
+        // Get current chainId from MetaMask
+        const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
+
+        if (currentChainId !== BASE_CHAIN_ID) {
+          throw new Error('Please switch to Base network in MetaMask (Chain ID 8453).');
+        }
+
         // Request accounts from MetaMask
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         const recipientAddress = accounts[0]; // User's address
@@ -135,7 +143,7 @@
         const tx = {
           to: CONTRACT_ADDRESS,
           data: '0x8da5cb5b', // Function selector for claimReward() (no parameters)
-          chainId: 8453, // Base chain
+          chainId: currentChainId, // Use the user's current chainId
           from: recipientAddress // Sender's address
         };
 
