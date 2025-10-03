@@ -6,7 +6,7 @@
   },
   "frame": {
     "version": "1",
-    "name": "Rock Paper Scissors",
+    "name": "minigame",
     "iconUrl": "https://farcaster-game.vercel.app/icon.png",
     "homeUrl": "https://farcaster-game.vercel.app",
     "imageUrl": "https://farcaster-game.vercel.app/image.png",
