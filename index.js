@@ -67,13 +67,15 @@ function generateFrameHtml(action, choice) {
     <head>
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=390, initial-scale=1.0" />
+      <title>Rock Paper Scissors Game</title>
       <meta property="fc:frame" content="vNext" />
       <meta property="fc:frame:image" content="https://source.unsplash.com/random/400x400/?${result}" />
+      <meta property="fc:frame:title" content="${result.charAt(0).toUpperCase() + result.slice(1)}! 🎮" />
+      <meta property="fc:frame:description" content="Computer chose ${computerChoice}. Try again!" />
+      <meta property="fc:frame:button:1" content="Play Again" />
+      <meta property="fc:frame:post_url" content="https://farcaster-game.vercel.app/" />
       <script type="module">
-        // Farcaster SDK लोड करें
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
-
-        // ऐप शुरू होने पर ready() कॉल करें
         const startApp = async () => {
           try {
             await sdk.actions.ready({ disableNativeGestures: true });
@@ -84,28 +86,10 @@ function generateFrameHtml(action, choice) {
         };
         startApp();
       </script>
-    `;
-    if (result === 'win') {
-      html += `
-      <meta property="fc:frame:title" content="You Win! 🎉" />
-      <meta property="fc:frame:description" content="Computer chose ${computerChoice}. Claim 1M $TIBBIR!" />
-      <meta property="fc:frame:button:1" content="Claim Reward" />
-      <meta property="fc:frame:button:1:action" content="tx" />
-      <meta property="fc:frame:tx" content="https://basescan.org/address/${CONTRACT_ADDRESS}?a=transfer&to=${YOUR_WALLET}&amount=${REWARD_AMOUNT}" />
-      <meta property="fc:frame:button:2" content="Play Again" />
-      <meta property="fc:frame:post_url" content="https://farcaster-game.vercel.app/" />
-      `;
-    } else {
-      html += `
-      <meta property="fc:frame:title" content="${result.charAt(0).toUpperCase() + result.slice(1)}!" />
-      <meta property="fc:frame:description" content="Computer chose ${computerChoice}. Try again!" />
-      <meta property="fc:frame:button:1" content="Play Again" />
-      <meta property="fc:frame:post_url" content="https://farcaster-game.vercel.app/" />
-      `;
-    }
-    html += `
     </head>
-    <body><h1>${result.toUpperCase()}</h1></body>
+    <body style="margin: 0; background: #00BFFF; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; text-align: center;">
+      <h1>${result.toUpperCase()}</h1>
+    </body>
     </html>
     `;
     return html;
@@ -116,23 +100,19 @@ function generateFrameHtml(action, choice) {
     <head>
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=390, initial-scale=1.0" />
+      <title>Rock Paper Scissors Game</title>
       <meta property="fc:frame" content="vNext" />
       <meta property="fc:frame:image" content="https://source.unsplash.com/random/400x400/?game" />
-      <meta property="fc:frame:title" content="Rock Paper Scissors" />
-      <meta property="fc:frame:description" content="Play & Win $TIBBIR on Base!" />
+      <meta property="fc:frame:title" content="Rock Paper Scissors 🎮" />
+      <meta property="fc:frame:description" content="Play & Win $TIBBIR on Base! Choose your move." />
       <meta property="fc:frame:button:1" content="Rock 🪨" />
       <meta property="fc:frame:post_url" content="https://farcaster-game.vercel.app/?action=play&choice=rock" />
       <meta property="fc:frame:button:2" content="Paper 📄" />
       <meta property="fc:frame:post_url" content="https://farcaster-game.vercel.app/?action=play&choice=paper" />
       <meta property="fc:frame:button:3" content="Scissors ✂️" />
       <meta property="fc:frame:post_url" content="https://farcaster-game.vercel.app/?action=play&choice=scissors" />
-      <meta property="fc:frame:splashImageUrl" content="https://farcaster-game.vercel.app/splash.png" />
-      <meta property="fc:frame:splashBackgroundColor" content="#FF4500" />
       <script type="module">
-        // Farcaster SDK लोड करें
         import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
-
-        // ऐप शुरू होने पर ready() कॉल करें
         const startApp = async () => {
           try {
             await sdk.actions.ready({ disableNativeGestures: true });
@@ -144,8 +124,11 @@ function generateFrameHtml(action, choice) {
         startApp();
       </script>
     </head>
-    <body><h1>Play Now!</h1></body>
+    <body style="margin: 0; background: #00BFFF; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; text-align: center;">
+      <h1>Play Now!</h1>
+    </body>
     </html>
     `;
   }
 }
+
