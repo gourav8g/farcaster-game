@@ -123,17 +123,29 @@
 
     async function claimReward() {
       try {
-        // Since encodeFunctionData is not available, call claimReward directly
-        const txHash = await sdk.wallet.sendTransaction({
+        if (!window.ethereum) {
+          throw new Error('Please install MetaMask or connect a wallet.');
+        }
+
+        // Get the user's address from Farcaster SDK or MetaMask
+        const recipientAddress = await sdk.wallet.getAddress() || (await window.ethereum.request({ method: 'eth_requestAccounts' }))[0];
+
+        // Encode the claimReward function call (no parameters)
+        const tx = {
           to: CONTRACT_ADDRESS,
-          data: '0x', // Empty data for a simple function call (claimReward has no parameters)
-          chainId: 8453
+          data: '0x8da5cb5b', // Function selector for claimReward() (no parameters)
+          chainId: 8453 // Base chain
+        };
+
+        const txHash = await window.ethereum.request({
+          method: 'eth_sendTransaction',
+          params: [tx]
         });
         document.getElementById('reward-btn').classList.remove('show');
         document.getElementById('result').innerText += ` Claimed 0.01 TIBBIR! TX: ${txHash}`;
       } catch (error) {
         console.error('TX Error:', error);
-        document.getElementById('result').innerText += ' Reward claim failed.';
+        document.getElementById('result').innerText += ' Reward claim failed. ' + (error.message || '');
       }
     }
   </script>
