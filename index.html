@@ -80,11 +80,9 @@
     let gameState = { choice: null, computerChoice: null, result: null };
     let isSdkReady = false;
 
-    // Contract data
     const CONTRACT_ADDRESS = '0x99407dc640bdb6853d1c706a7122d85cbffce935';
     let contractAbi = null;
 
-    // Load ABI from local contract.json
     async function loadAbi() {
       const res = await fetch('contract.json');
       contractAbi = await res.json();
@@ -138,13 +136,11 @@
         const accounts = await provider.request({ method: 'eth_accounts' });
         const userAddress = accounts[0];
 
-        // Check if already claimed
         const iface = new ethers.Interface(contractAbi);
-        const hasClaimedData = iface.encodeFunctionData('hasClaimed', [userAddress]);
-        const result = await provider.request({
-          method: 'eth_call',
-          params: [{ to: CONTRACT_ADDRESS, data: hasClaimedData }]
-        });
+
+        // Check if user already claimed
+        const dataCheck = iface.encodeFunctionData('hasClaimed', [userAddress]);
+        const result = await provider.request({ method: 'eth_call', params: [{ to: CONTRACT_ADDRESS, data: dataCheck }] });
         const alreadyClaimed = ethers.decodeBoolean(result);
         if(alreadyClaimed) {
           document.getElementById('result').innerText += ' ⚠️ Reward already claimed!';
@@ -152,14 +148,14 @@
           return;
         }
 
-        // Prepare transaction
+        // Claim reward
         const txData = iface.encodeFunctionData('claimReward', []);
         const tx = { to: CONTRACT_ADDRESS, from: userAddress, data: txData };
 
         const txHash = await provider.request({ method: 'eth_sendTransaction', params: [tx] });
+
         document.getElementById('reward-btn').classList.remove('show');
         document.getElementById('result').innerText += ` 🎉 Claimed reward! TX: ${txHash}`;
-
       } catch (error) {
         console.error('TX Error:', error);
         document.getElementById('result').innerText += ' ❌ Reward claim failed. ' + (error.message || '');
