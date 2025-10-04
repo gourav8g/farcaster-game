@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=390, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Rock Paper Scissors Mini App</title>
 
   <meta name="fc:miniapp" content='{
@@ -74,33 +74,33 @@
   </div>
 
   <script type="module">
-    import { sdk } from "https://esm.sh/@farcaster/miniapp-sdk";
+    import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
 
     let gameState = { choice: null, computerChoice: null, result: null };
     let isSdkReady = false;
-    let contractData = null;
 
-    const BASE_CHAIN = "eip155:8453"; // Base chain in CAIP-2 format
+    // Contract data
+    const contractData = {
+      address: '0x99407dc640bdb6853d1c706a7122d85cbffce935'
+    };
+    const claimRewardSelector = '0x379607f5'; // claimReward() ka selector
 
-    document.addEventListener("DOMContentLoaded", async () => {
+    document.addEventListener('DOMContentLoaded', async () => {
       try {
-        // Load contract.json
-        contractData = await fetch("./contract.json").then(res => res.json());
-
-        // SDK ready
         await sdk.actions.ready();
-        console.log("SDK Ready - Mini App Loaded");
+        console.log('SDK Ready - Mini App Loaded');
         isSdkReady = true;
 
         // Game buttons
-        document.getElementById("rock-btn").addEventListener("click", () => makeChoice("rock"));
-        document.getElementById("paper-btn").addEventListener("click", () => makeChoice("paper"));
-        document.getElementById("scissors-btn").addEventListener("click", () => makeChoice("scissors"));
+        document.getElementById('rock-btn').addEventListener('click', () => makeChoice('rock'));
+        document.getElementById('paper-btn').addEventListener('click', () => makeChoice('paper'));
+        document.getElementById('scissors-btn').addEventListener('click', () => makeChoice('scissors'));
 
-        // Reward claim button
-        document.getElementById("reward-btn").addEventListener("click", claimReward);
+        // Reward button
+        document.getElementById('reward-btn').addEventListener('click', claimReward);
+
       } catch (error) {
-        console.error("Initialization Error:", error);
+        console.error('SDK Initialization Error:', error);
       }
     });
 
@@ -108,42 +108,47 @@
       if (!isSdkReady) return;
 
       gameState.choice = playerChoice;
-      gameState.computerChoice = ["rock", "paper", "scissors"][Math.floor(Math.random() * 3)];
+      gameState.computerChoice = ['rock','paper','scissors'][Math.floor(Math.random()*3)];
 
-      if (playerChoice === gameState.computerChoice) gameState.result = "tie";
+      if (playerChoice === gameState.computerChoice) gameState.result = 'tie';
       else if (
-        (playerChoice === "rock" && gameState.computerChoice === "scissors") ||
-        (playerChoice === "paper" && gameState.computerChoice === "rock") ||
-        (playerChoice === "scissors" && gameState.computerChoice === "paper")
-      ) gameState.result = "win";
-      else gameState.result = "lose";
+        (playerChoice==='rock' && gameState.computerChoice==='scissors') ||
+        (playerChoice==='paper' && gameState.computerChoice==='rock') ||
+        (playerChoice==='scissors' && gameState.computerChoice==='paper')
+      ) gameState.result = 'win';
+      else gameState.result = 'lose';
 
-      const resultDiv = document.getElementById("result");
+      const resultDiv = document.getElementById('result');
       resultDiv.innerText = `You chose ${playerChoice}, Computer chose ${gameState.computerChoice}. Result: ${gameState.result}!`;
 
-      if (gameState.result === "win") document.getElementById("reward-btn").classList.add("show");
-      else document.getElementById("reward-btn").classList.remove("show");
+      if(gameState.result==='win') document.getElementById('reward-btn').classList.add('show');
+      else document.getElementById('reward-btn').classList.remove('show');
     }
 
     async function claimReward() {
       try {
-        if (!isSdkReady || !contractData) throw new Error("SDK or contract not ready");
+        if(!isSdkReady) throw new Error('SDK not ready');
 
-        // Manual function selector for claimReward()
-        const data = "0x379607f5"; // claimReward() selector
+        const provider = await sdk.wallet.getEthereumProvider();
+        if(!provider) throw new Error('Ethereum provider not available');
 
-        // Send transaction via Farcaster embedded wallet
-        const txHash = await sdk.wallet.sendTransaction({
-          chainId: BASE_CHAIN,
+        const accounts = await provider.request({ method: 'eth_accounts' });
+        const from = accounts[0];
+
+        const tx = {
           to: contractData.address,
-          data
-        });
+          data: claimRewardSelector,
+          from
+        };
 
-        document.getElementById("reward-btn").classList.remove("show");
-        document.getElementById("result").innerText += ` 🎉 Claimed reward! TX: ${txHash}`;
+        const txHash = await provider.request({ method: 'eth_sendTransaction', params: [tx] });
+
+        document.getElementById('reward-btn').classList.remove('show');
+        document.getElementById('result').innerText += ` 🎉 Claimed reward! TX: ${txHash}`;
+
       } catch (error) {
-        console.error("TX Error:", error);
-        document.getElementById("result").innerText += " ❌ Reward claim failed. " + (error.message || "");
+        console.error('TX Error:', error);
+        document.getElementById('result').innerText += ' ❌ Reward claim failed. ' + (error.message || '');
       }
     }
   </script>
