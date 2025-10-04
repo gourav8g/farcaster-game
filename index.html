@@ -126,31 +126,36 @@
     }
 
     async function claimReward() {
-      try {
-        if(!isSdkReady) throw new Error('SDK not ready');
+  try {
+    if(!isSdkReady) throw new Error('SDK not ready');
+    const provider = await sdk.wallet.getEthereumProvider();
+    const accounts = await provider.request({ method: 'eth_accounts' });
+    const from = accounts[0];
 
-        const provider = await sdk.wallet.getEthereumProvider();
-        if(!provider) throw new Error('Ethereum provider not available');
-
-        const accounts = await provider.request({ method: 'eth_accounts' });
-        const from = accounts[0];
-
-        const tx = {
-          to: contractData.address,
-          data: claimRewardSelector,
-          from
-        };
-
-        const txHash = await provider.request({ method: 'eth_sendTransaction', params: [tx] });
-
-        document.getElementById('reward-btn').classList.remove('show');
-        document.getElementById('result').innerText += ` 🎉 Claimed reward! TX: ${txHash}`;
-
-      } catch (error) {
-        console.error('TX Error:', error);
-        document.getElementById('result').innerText += ' ❌ Reward claim failed. ' + (error.message || '');
-      }
+    // Check if user already claimed
+    const iface = new ethers.Interface(contractAbi); // contractAbi ko import ya fetch karna hoga
+    const dataCheck = iface.encodeFunctionData('hasClaimed', [from]);
+    const alreadyClaimed = await provider.request({
+      method: 'eth_call',
+      params: [{ to: contractData.address, data: dataCheck }]
+    });
+    if (parseInt(alreadyClaimed,16)) {
+      alert('You already claimed reward!');
+      return;
     }
+
+    // Send claim transaction
+    const data = iface.encodeFunctionData('claimReward', []);
+    const tx = { to: contractData.address, from, data };
+    const txHash = await provider.request({ method: 'eth_sendTransaction', params: [tx] });
+    document.getElementById('reward-btn').classList.remove('show');
+    document.getElementById('result').innerText += ` 🎉 Claimed reward! TX: ${txHash}`;
+
+  } catch (error) {
+    console.error('TX Error:', error);
+    document.getElementById('result').innerText += ' ❌ Reward claim failed. ' + (error.message || '');
+  }
+}
   </script>
 </body>
 </html>
