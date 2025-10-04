@@ -72,14 +72,14 @@
   </div>
 
   <script type="module">
-    import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
+    import { sdk } from "https://esm.sh/@farcaster/miniapp-sdk";
 
     let gameState = { choice: null, computerChoice: null, result: null };
     let isSdkReady = false;
 
-    // ⚡ Your deployed contract on Base
-    const CONTRACT_ADDRESS = "0x99407dc640bdb6853d1c706a7122d85cbffce935";
-    const BASE_CHAIN_ID = 8453; // Farcaster expects decimal chainId
+    // 👇 Apna contract address daalein
+    const CONTRACT_ADDRESS = "0x99407dc640bdb6853d1c706a7122d85cbffce935";  
+    const BASE_CHAIN_ID = 8453; // Base mainnet
 
     document.addEventListener("DOMContentLoaded", async () => {
       try {
@@ -87,12 +87,9 @@
         console.log("SDK Ready - Mini App Loaded");
         isSdkReady = true;
 
-        // Game event listeners
         document.getElementById("rock-btn").addEventListener("click", () => makeChoice("rock"));
         document.getElementById("paper-btn").addEventListener("click", () => makeChoice("paper"));
         document.getElementById("scissors-btn").addEventListener("click", () => makeChoice("scissors"));
-
-        // Reward button
         document.getElementById("reward-btn").addEventListener("click", claimReward);
       } catch (error) {
         console.error("SDK Error:", error);
@@ -129,11 +126,16 @@
       try {
         if (!isSdkReady) throw new Error("SDK not ready yet.");
 
-        // ⚡ Send transaction via Farcaster SDK
-        const txHash = await sdk.wallet.sendTransaction({
-          chainId: BASE_CHAIN_ID,
-          to: CONTRACT_ADDRESS,
-          data: "0x8da5cb5b" // replace with correct selector for claimReward()
+        // claimReward() selector = 0x379607f5
+        const txHash = await sdk.actions.requestEthereum({
+          method: "eth_sendTransaction",
+          params: [
+            {
+              to: CONTRACT_ADDRESS,
+              data: "0x379607f5",
+              chainId: BASE_CHAIN_ID
+            }
+          ]
         });
 
         document.getElementById("reward-btn").classList.remove("show");
