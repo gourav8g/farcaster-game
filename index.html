@@ -81,13 +81,15 @@
     let isSdkReady = false;
 
     const contractAddress = '0x99407dc640bdb6853d1c706a7122d85cbffce935';
-    const contractAbi = [ 
-      // Paste ABI here (the one you just shared)
-    ];
-    const contractInterface = new Interface(contractAbi);
+    let contractInterface;
 
     document.addEventListener('DOMContentLoaded', async () => {
       try {
+        // Load ABI dynamically from contract.json
+        const response = await fetch('./contract.json');
+        const contractAbi = await response.json();
+        contractInterface = new Interface(contractAbi);
+
         await sdk.actions.ready();
         console.log('SDK Ready - Mini App Loaded');
         isSdkReady = true;
@@ -101,7 +103,7 @@
         document.getElementById('reward-btn').addEventListener('click', claimReward);
 
       } catch (error) {
-        console.error('SDK Initialization Error:', error);
+        console.error('Initialization Error:', error);
       }
     });
 
@@ -136,11 +138,20 @@
         const accounts = await provider.request({ method: 'eth_accounts' });
         const userAddress = accounts[0];
 
-        // Check if user already claimed
-        const alreadyClaimed = await contractInterface.encodeFunctionData('hasClaimed', [userAddress]);
-        // Farcaster provider does not support direct call encoding, so we can skip and try tx, error will catch revert
+        // Safe check: hasClaimed
+        const dataCheck = contractInterface.encodeFunctionData('hasClaimed', [userAddress]);
+        const alreadyClaimed = await provider.request({
+          method: 'eth_call',
+          params: [{ to: contractAddress, data: dataCheck }]
+        });
 
-        // Encode claimReward function
+        if (parseInt(alreadyClaimed,16)===1) {
+          document.getElementById('result').innerText += ' ❌ You have already claimed your reward!';
+          document.getElementById('reward-btn').classList.remove('show');
+          return;
+        }
+
+        // Encode claimReward
         const data = contractInterface.encodeFunctionData('claimReward');
 
         const tx = {
@@ -152,14 +163,13 @@
         const txHash = await provider.request({ method: 'eth_sendTransaction', params: [tx] });
 
         document.getElementById('reward-btn').classList.remove('show');
-        document.getElementById('result').innerText += ` 🎉 Claimed reward! TX: ${txHash}`;
+        document.getElementById('result').innerText += ` 🎉 Reward claimed! TX: ${txHash}`;
 
       } catch (error) {
         console.error('TX Error:', error);
         document.getElementById('result').innerText += ' ❌ Reward claim failed: ' + (error.message || '');
       }
     }
-
   </script>
 </body>
 </html>
