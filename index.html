@@ -75,15 +75,20 @@
 
   <script type="module">
     import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
+    import { ethers } from 'https://cdn.jsdelivr.net/npm/ethers@6.8.3/dist/ethers.min.js';
 
     let gameState = { choice: null, computerChoice: null, result: null };
     let isSdkReady = false;
 
     // Contract data
-    const contractData = {
-      address: '0x99407dc640bdb6853d1c706a7122d85cbffce935'
-    };
-    const claimRewardSelector = '0x379607f5'; // claimReward() ka selector
+    const CONTRACT_ADDRESS = '0x99407dc640bdb6853d1c706a7122d85cbffce935';
+    let contractAbi = null;
+
+    // Load ABI from local contract.json
+    async function loadAbi() {
+      const res = await fetch('contract.json');
+      contractAbi = await res.json();
+    }
 
     document.addEventListener('DOMContentLoaded', async () => {
       try {
@@ -91,16 +96,14 @@
         console.log('SDK Ready - Mini App Loaded');
         isSdkReady = true;
 
-        // Game buttons
+        await loadAbi();
+
         document.getElementById('rock-btn').addEventListener('click', () => makeChoice('rock'));
         document.getElementById('paper-btn').addEventListener('click', () => makeChoice('paper'));
         document.getElementById('scissors-btn').addEventListener('click', () => makeChoice('scissors'));
-
-        // Reward button
         document.getElementById('reward-btn').addEventListener('click', claimReward);
-
       } catch (error) {
-        console.error('SDK Initialization Error:', error);
+        console.error('SDK Error:', error);
       }
     });
 
@@ -126,36 +129,42 @@
     }
 
     async function claimReward() {
-  try {
-    if(!isSdkReady) throw new Error('SDK not ready');
-    const provider = await sdk.wallet.getEthereumProvider();
-    const accounts = await provider.request({ method: 'eth_accounts' });
-    const from = accounts[0];
+      try {
+        if(!isSdkReady) throw new Error('SDK not ready');
 
-    // Check if user already claimed
-    const iface = new ethers.Interface(contractAbi); // contractAbi ko import ya fetch karna hoga
-    const dataCheck = iface.encodeFunctionData('hasClaimed', [from]);
-    const alreadyClaimed = await provider.request({
-      method: 'eth_call',
-      params: [{ to: contractData.address, data: dataCheck }]
-    });
-    if (parseInt(alreadyClaimed,16)) {
-      alert('You already claimed reward!');
-      return;
+        const provider = await sdk.wallet.getEthereumProvider();
+        if(!provider) throw new Error('Ethereum provider not available');
+
+        const accounts = await provider.request({ method: 'eth_accounts' });
+        const userAddress = accounts[0];
+
+        // Check if already claimed
+        const iface = new ethers.Interface(contractAbi);
+        const hasClaimedData = iface.encodeFunctionData('hasClaimed', [userAddress]);
+        const result = await provider.request({
+          method: 'eth_call',
+          params: [{ to: CONTRACT_ADDRESS, data: hasClaimedData }]
+        });
+        const alreadyClaimed = ethers.decodeBoolean(result);
+        if(alreadyClaimed) {
+          document.getElementById('result').innerText += ' ⚠️ Reward already claimed!';
+          document.getElementById('reward-btn').classList.remove('show');
+          return;
+        }
+
+        // Prepare transaction
+        const txData = iface.encodeFunctionData('claimReward', []);
+        const tx = { to: CONTRACT_ADDRESS, from: userAddress, data: txData };
+
+        const txHash = await provider.request({ method: 'eth_sendTransaction', params: [tx] });
+        document.getElementById('reward-btn').classList.remove('show');
+        document.getElementById('result').innerText += ` 🎉 Claimed reward! TX: ${txHash}`;
+
+      } catch (error) {
+        console.error('TX Error:', error);
+        document.getElementById('result').innerText += ' ❌ Reward claim failed. ' + (error.message || '');
+      }
     }
-
-    // Send claim transaction
-    const data = iface.encodeFunctionData('claimReward', []);
-    const tx = { to: contractData.address, from, data };
-    const txHash = await provider.request({ method: 'eth_sendTransaction', params: [tx] });
-    document.getElementById('reward-btn').classList.remove('show');
-    document.getElementById('result').innerText += ` 🎉 Claimed reward! TX: ${txHash}`;
-
-  } catch (error) {
-    console.error('TX Error:', error);
-    document.getElementById('result').innerText += ' ❌ Reward claim failed. ' + (error.message || '');
-  }
-}
   </script>
 </body>
 </html>
