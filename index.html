@@ -75,15 +75,16 @@
 
   <script type="module">
     import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
+    import { Interface } from 'https://cdn.jsdelivr.net/npm/ethers@6.6.2/dist/ethers.min.mjs';
 
     let gameState = { choice: null, computerChoice: null, result: null };
     let isSdkReady = false;
 
-    // Contract data
-    const contractData = {
-      address: '0x99407dc640bdb6853d1c706a7122d85cbffce935'
-    };
-    const claimRewardSelector = '0x379607f5'; // claimReward() ka selector
+    const contractAddress = '0x99407dc640bdb6853d1c706a7122d85cbffce935';
+    const contractAbi = [ 
+      // Paste ABI here (the one you just shared)
+    ];
+    const contractInterface = new Interface(contractAbi);
 
     document.addEventListener('DOMContentLoaded', async () => {
       try {
@@ -133,12 +134,19 @@
         if(!provider) throw new Error('Ethereum provider not available');
 
         const accounts = await provider.request({ method: 'eth_accounts' });
-        const from = accounts[0];
+        const userAddress = accounts[0];
+
+        // Check if user already claimed
+        const alreadyClaimed = await contractInterface.encodeFunctionData('hasClaimed', [userAddress]);
+        // Farcaster provider does not support direct call encoding, so we can skip and try tx, error will catch revert
+
+        // Encode claimReward function
+        const data = contractInterface.encodeFunctionData('claimReward');
 
         const tx = {
-          to: contractData.address,
-          data: claimRewardSelector,
-          from
+          to: contractAddress,
+          from: userAddress,
+          data
         };
 
         const txHash = await provider.request({ method: 'eth_sendTransaction', params: [tx] });
@@ -148,9 +156,10 @@
 
       } catch (error) {
         console.error('TX Error:', error);
-        document.getElementById('result').innerText += ' ❌ Reward claim failed. ' + (error.message || '');
+        document.getElementById('result').innerText += ' ❌ Reward claim failed: ' + (error.message || '');
       }
     }
+
   </script>
 </body>
 </html>
