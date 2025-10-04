@@ -51,7 +51,7 @@
       margin-top: 10px;
       font-size: 1.2rem;
       cursor: pointer;
-      background: #28a745; /* Green color for reward button */
+      background: #28a745;
       color: white;
       border: none;
       border-radius: 5px;
@@ -68,94 +68,79 @@
     <button class="choice-btn" id="paper-btn">Paper 📄</button>
     <button class="choice-btn" id="scissors-btn">Scissors ✂️</button>
     <div id="result"></div>
-    <button id="reward-btn">Claim Reward</button> <!-- Removed onclick -->
+    <button id="reward-btn">Claim Reward</button>
   </div>
+
   <script type="module">
     import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
 
     let gameState = { choice: null, computerChoice: null, result: null };
     let isSdkReady = false;
-    const CONTRACT_ADDRESS = '0x99407dc640bdb6853d1c706a7122d85cbffce935'; // Replace with your deployed contract address
-    const BASE_CHAIN_ID = '0x2131'; // Hex for 8453 (Base chain)
 
-    document.addEventListener('DOMContentLoaded', async () => {
+    // ⚡ Your deployed contract on Base
+    const CONTRACT_ADDRESS = "0x99407dc640bdb6853d1c706a7122d85cbffce935";
+    const BASE_CHAIN_ID = 8453; // Farcaster expects decimal chainId
+
+    document.addEventListener("DOMContentLoaded", async () => {
       try {
         await sdk.actions.ready();
-        console.log('SDK Ready - Mini App Loaded');
+        console.log("SDK Ready - Mini App Loaded");
         isSdkReady = true;
 
-        // Add event listeners for choice buttons
-        document.getElementById('rock-btn').addEventListener('click', () => makeChoice('rock'));
-        document.getElementById('paper-btn').addEventListener('click', () => makeChoice('paper'));
-        document.getElementById('scissors-btn').addEventListener('click', () => makeChoice('scissors'));
+        // Game event listeners
+        document.getElementById("rock-btn").addEventListener("click", () => makeChoice("rock"));
+        document.getElementById("paper-btn").addEventListener("click", () => makeChoice("paper"));
+        document.getElementById("scissors-btn").addEventListener("click", () => makeChoice("scissors"));
 
-        // Add event listener for reward button
-        document.getElementById('reward-btn').addEventListener('click', claimReward);
+        // Reward button
+        document.getElementById("reward-btn").addEventListener("click", claimReward);
       } catch (error) {
-        console.error('SDK Error:', error);
+        console.error("SDK Error:", error);
       }
     });
 
-    async function makeChoice(playerChoice) {
+    function makeChoice(playerChoice) {
       if (!isSdkReady) {
-        console.log('SDK not ready yet');
+        console.log("SDK not ready yet");
         return;
       }
       gameState.choice = playerChoice;
-      gameState.computerChoice = ['rock', 'paper', 'scissors'][Math.floor(Math.random() * 3)];
+      gameState.computerChoice = ["rock", "paper", "scissors"][Math.floor(Math.random() * 3)];
 
-      if (playerChoice === gameState.computerChoice) gameState.result = 'tie';
+      if (playerChoice === gameState.computerChoice) gameState.result = "tie";
       else if (
-        (playerChoice === 'rock' && gameState.computerChoice === 'scissors') ||
-        (playerChoice === 'paper' && gameState.computerChoice === 'rock') ||
-        (playerChoice === 'scissors' && gameState.computerChoice === 'paper')
-      ) gameState.result = 'win';
-      else gameState.result = 'lose';
+        (playerChoice === "rock" && gameState.computerChoice === "scissors") ||
+        (playerChoice === "paper" && gameState.computerChoice === "rock") ||
+        (playerChoice === "scissors" && gameState.computerChoice === "paper")
+      ) gameState.result = "win";
+      else gameState.result = "lose";
 
-      const resultDiv = document.getElementById('result');
+      const resultDiv = document.getElementById("result");
       resultDiv.innerText = `You chose ${playerChoice}, Computer chose ${gameState.computerChoice}. Result: ${gameState.result}!`;
 
-      if (gameState.result === 'win') {
-        document.getElementById('reward-btn').classList.add('show');
+      if (gameState.result === "win") {
+        document.getElementById("reward-btn").classList.add("show");
       } else {
-        document.getElementById('reward-btn').classList.remove('show');
+        document.getElementById("reward-btn").classList.remove("show");
       }
     }
 
     async function claimReward() {
       try {
-        if (!window.ethereum) {
-          throw new Error('Please install MetaMask or connect a wallet.');
-        }
+        if (!isSdkReady) throw new Error("SDK not ready yet.");
 
-        // Get current chainId from MetaMask
-        const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
-
-        if (currentChainId !== BASE_CHAIN_ID) {
-          throw new Error('Please switch to Base network in MetaMask (Chain ID 8453).');
-        }
-
-        // Request accounts from MetaMask
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        const recipientAddress = accounts[0]; // User's address
-
-        // Encode the claimReward function call
-        const tx = {
+        // ⚡ Send transaction via Farcaster SDK
+        const txHash = await sdk.wallet.sendTransaction({
+          chainId: BASE_CHAIN_ID,
           to: CONTRACT_ADDRESS,
-          data: '0x8da5cb5b', // Function selector for claimReward() (no parameters)
-          chainId: currentChainId, // Use the user's current chainId
-          from: recipientAddress // Sender's address
-        };
-
-        const txHash = await window.ethereum.request({
-          method: 'eth_sendTransaction',
-          params: [tx]
+          data: "0x8da5cb5b" // replace with correct selector for claimReward()
         });
-        document.getElementById('reward-btn').classList.remove('show');
-        document.getElementById('result').innerText += ` Claimed 0.01 TIBBIR! TX: ${txHash}`;
+
+        document.getElementById("reward-btn").classList.remove("show");
+        document.getElementById("result").innerText += ` 🎉 Claimed reward! TX: ${txHash}`;
       } catch (error) {
-        console.error('TX Error:', error);
-        document.getElementById('result').innerText += ' Reward claim failed. ' + (error.message || '');
+        console.error("TX Error:", error);
+        document.getElementById("result").innerText += " Reward claim failed. " + (error.message || "");
       }
     }
   </script>
