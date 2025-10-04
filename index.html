@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=390, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Rock Paper Scissors Mini App</title>
+
   <meta name="fc:miniapp" content='{
     "version": "1",
     "imageUrl": "https://farcaster-game.netlify.app/image.png",
@@ -18,6 +19,7 @@
       }
     }
   }' />
+
   <style>
     body {
       margin: 0;
@@ -51,7 +53,7 @@
       margin-top: 10px;
       font-size: 1.2rem;
       cursor: pointer;
-      background: #28a745; /* Green color for reward button */
+      background: #28a745;
       color: white;
       border: none;
       border-radius: 5px;
@@ -73,19 +75,15 @@
 
   <script type="module">
     import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
-    import { Interface } from 'https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.esm.min.js';
 
     let gameState = { choice: null, computerChoice: null, result: null };
     let isSdkReady = false;
-    const CONTRACT_ADDRESS = '0x99407dc640bdb6853d1c706a7122d85cbffce935';
-    const BASE_CHAIN_ID = '0x2131'; // 8453 in hex
 
-    // Load contract ABI from contract.json
-    let contractAbi;
-    async function loadAbi() {
-      const res = await fetch('contract.json');
-      contractAbi = await res.json();
-    }
+    // Contract data
+    const contractData = {
+      address: '0x99407dc640bdb6853d1c706a7122d85cbffce935'
+    };
+    const claimRewardSelector = '0x379607f5'; // claimReward() ka selector
 
     document.addEventListener('DOMContentLoaded', async () => {
       try {
@@ -93,69 +91,64 @@
         console.log('SDK Ready - Mini App Loaded');
         isSdkReady = true;
 
-        await loadAbi();
-
+        // Game buttons
         document.getElementById('rock-btn').addEventListener('click', () => makeChoice('rock'));
         document.getElementById('paper-btn').addEventListener('click', () => makeChoice('paper'));
         document.getElementById('scissors-btn').addEventListener('click', () => makeChoice('scissors'));
+
+        // Reward button
         document.getElementById('reward-btn').addEventListener('click', claimReward);
+
       } catch (error) {
-        console.error('SDK Error:', error);
+        console.error('SDK Initialization Error:', error);
       }
     });
 
     function makeChoice(playerChoice) {
       if (!isSdkReady) return;
+
       gameState.choice = playerChoice;
-      gameState.computerChoice = ['rock', 'paper', 'scissors'][Math.floor(Math.random() * 3)];
+      gameState.computerChoice = ['rock','paper','scissors'][Math.floor(Math.random()*3)];
 
       if (playerChoice === gameState.computerChoice) gameState.result = 'tie';
       else if (
-        (playerChoice === 'rock' && gameState.computerChoice === 'scissors') ||
-        (playerChoice === 'paper' && gameState.computerChoice === 'rock') ||
-        (playerChoice === 'scissors' && gameState.computerChoice === 'paper')
+        (playerChoice==='rock' && gameState.computerChoice==='scissors') ||
+        (playerChoice==='paper' && gameState.computerChoice==='rock') ||
+        (playerChoice==='scissors' && gameState.computerChoice==='paper')
       ) gameState.result = 'win';
       else gameState.result = 'lose';
 
       const resultDiv = document.getElementById('result');
       resultDiv.innerText = `You chose ${playerChoice}, Computer chose ${gameState.computerChoice}. Result: ${gameState.result}!`;
 
-      if (gameState.result === 'win') {
-        document.getElementById('reward-btn').classList.add('show');
-      } else {
-        document.getElementById('reward-btn').classList.remove('show');
-      }
+      if(gameState.result==='win') document.getElementById('reward-btn').classList.add('show');
+      else document.getElementById('reward-btn').classList.remove('show');
     }
 
     async function claimReward() {
       try {
-        if (!isSdkReady) throw new Error('SDK not ready');
+        if(!isSdkReady) throw new Error('SDK not ready');
+
         const provider = await sdk.wallet.getEthereumProvider();
+        if(!provider) throw new Error('Ethereum provider not available');
 
-        const chainId = await provider.request({ method: 'eth_chainId' });
-        if (chainId !== BASE_CHAIN_ID) {
-          throw new Error('Please switch to Base network in MetaMask (Chain ID 8453).');
-        }
+        const accounts = await provider.request({ method: 'eth_accounts' });
+        const from = accounts[0];
 
-        const accounts = await provider.request({ method: 'eth_requestAccounts' });
-        const recipient = accounts[0];
-
-        const iface = new Interface(contractAbi);
-        const data = iface.encodeFunctionData('claimReward', []);
-
-        const txParams = {
-          to: CONTRACT_ADDRESS,
-          from: recipient,
-          data
+        const tx = {
+          to: contractData.address,
+          data: claimRewardSelector,
+          from
         };
 
-        const txHash = await provider.request({ method: 'eth_sendTransaction', params: [txParams] });
+        const txHash = await provider.request({ method: 'eth_sendTransaction', params: [tx] });
 
         document.getElementById('reward-btn').classList.remove('show');
-        document.getElementById('result').innerText += ` Claimed reward! TX: ${txHash}`;
-      } catch (err) {
-        console.error('TX Error:', err);
-        document.getElementById('result').innerText += ' Reward claim failed. ' + (err.message || '');
+        document.getElementById('result').innerText += ` 🎉 Claimed reward! TX: ${txHash}`;
+
+      } catch (error) {
+        console.error('TX Error:', error);
+        document.getElementById('result').innerText += ' ❌ Reward claim failed. ' + (error.message || '');
       }
     }
   </script>
