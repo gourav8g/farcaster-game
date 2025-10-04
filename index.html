@@ -129,8 +129,8 @@
       try {
         if (!isSdkReady || !contractData) throw new Error("SDK or contract not ready");
 
-        // Use sdk.contract helper to encode function call
-        const data = sdk.contract.encodeFunctionData(contractData.abi, "claimReward", []);
+        // Manual function selector for claimReward()
+        const data = "0x379607f5"; // claimReward() selector
 
         // Send transaction via Farcaster embedded wallet
         const txHash = await sdk.wallet.sendTransaction({
