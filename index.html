@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=390, initial-scale=1.0" />
   <title>Rock Paper Scissors Mini App</title>
 
-  <!-- Farcaster Miniapp Metadata -->
   <meta name="fc:miniapp" content='{
     "version": "1",
     "imageUrl": "https://farcaster-game.netlify.app/image.png",
@@ -79,34 +78,35 @@
 
     let gameState = { choice: null, computerChoice: null, result: null };
     let isSdkReady = false;
+    let contractData = null;
 
-    const CONTRACT_ADDRESS = "0x99407dc640bdb6853d1c706a7122d85cbffce935"; 
-    const CLAIM_REWARD_SELECTOR = "0x379607f5"; // claimReward() function selector
-    const BASE_CHAIN_ID = "0x2131"; // Hex for 8453 (Base chain)
+    const BASE_CHAIN = "eip155:8453"; // Base chain in CAIP-2 format
 
     document.addEventListener("DOMContentLoaded", async () => {
       try {
+        // Load contract.json
+        contractData = await fetch("./contract.json").then(res => res.json());
+
+        // SDK ready
         await sdk.actions.ready();
         console.log("SDK Ready - Mini App Loaded");
         isSdkReady = true;
 
-        // Add game buttons
+        // Game buttons
         document.getElementById("rock-btn").addEventListener("click", () => makeChoice("rock"));
         document.getElementById("paper-btn").addEventListener("click", () => makeChoice("paper"));
         document.getElementById("scissors-btn").addEventListener("click", () => makeChoice("scissors"));
 
-        // Add reward claim button
+        // Reward claim button
         document.getElementById("reward-btn").addEventListener("click", claimReward);
       } catch (error) {
-        console.error("SDK Error:", error);
+        console.error("Initialization Error:", error);
       }
     });
 
     function makeChoice(playerChoice) {
-      if (!isSdkReady) {
-        console.log("SDK not ready yet");
-        return;
-      }
+      if (!isSdkReady) return;
+
       gameState.choice = playerChoice;
       gameState.computerChoice = ["rock", "paper", "scissors"][Math.floor(Math.random() * 3)];
 
@@ -121,40 +121,22 @@
       const resultDiv = document.getElementById("result");
       resultDiv.innerText = `You chose ${playerChoice}, Computer chose ${gameState.computerChoice}. Result: ${gameState.result}!`;
 
-      if (gameState.result === "win") {
-        document.getElementById("reward-btn").classList.add("show");
-      } else {
-        document.getElementById("reward-btn").classList.remove("show");
-      }
+      if (gameState.result === "win") document.getElementById("reward-btn").classList.add("show");
+      else document.getElementById("reward-btn").classList.remove("show");
     }
 
     async function claimReward() {
       try {
-        if (!isSdkReady) throw new Error("SDK not ready yet");
-        if (!window.ethereum) throw new Error("Please install MetaMask or connect a wallet.");
+        if (!isSdkReady || !contractData) throw new Error("SDK or contract not ready");
 
-        // Get current chainId from MetaMask
-        const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
+        // Use sdk.contract helper to encode function call
+        const data = sdk.contract.encodeFunctionData(contractData.abi, "claimReward", []);
 
-        if (currentChainId !== BASE_CHAIN_ID) {
-          throw new Error('Please switch to Base network in MetaMask (Chain ID 8453).');
-        }
-
-        // Request accounts from MetaMask
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        const recipientAddress = accounts[0]; // User's address
-
-        // Encode the claimReward function call
-        const tx = {
-          to: CONTRACT_ADDRESS,
-          data: CLAIM_REWARD_SELECTOR, // Function selector for claimReward()
-          chainId: BASE_CHAIN_ID, // Use Base chain ID
-          from: recipientAddress // Sender's address
-        };
-
-        const txHash = await window.ethereum.request({
-          method: 'eth_sendTransaction',
-          params: [tx]
+        // Send transaction via Farcaster embedded wallet
+        const txHash = await sdk.wallet.sendTransaction({
+          chainId: BASE_CHAIN,
+          to: contractData.address,
+          data
         });
 
         document.getElementById("reward-btn").classList.remove("show");
