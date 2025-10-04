@@ -1,179 +1,150 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Rock Paper Scissors Mini App</title>
-
-<meta name="fc:miniapp" content='{
-  "version": "1",
-  "imageUrl": "https://farcaster-game.netlify.app/image.png",
-  "button": {
-    "title": "Play Now",
-    "action": {
-      "type": "launch_frame",
-      "name": "RockPaperScissors",
-      "url": "https://farcaster-game.netlify.app/",
-      "splashImageUrl": "https://farcaster-game.netlify.app/splash.png",
-      "splashBackgroundColor": "#00BFFF"
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rock Paper Scissors Mini App</title>
+  <meta name="fc:miniapp" content='{
+    "version": "1",
+    "imageUrl": "https://farcaster-game.netlify.app/image.png",
+    "button": {
+      "title": "Play Now",
+      "action": {
+        "type": "launch_frame",
+        "name": "RockPaperScissors",
+        "url": "https://farcaster-game.netlify.app/",
+        "splashImageUrl": "https://farcaster-game.netlify.app/splash.png",
+        "splashBackgroundColor": "#00BFFF"
+      }
     }
-  }
-}' />
-
-<style>
-  body {
-    margin: 0;
-    background: #00BFFF;
-    color: white;
-    font-family: sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    text-align: center;
-  }
-  .choice-btn, #claim-btn {
-    padding: 10px 20px;
-    margin: 10px;
-    font-size: 1.2rem;
-    cursor: pointer;
-    background: white;
-    color: #00BFFF;
-    border: none;
-    border-radius: 5px;
-  }
-  #result, #status {
-    font-size: 1.5rem;
-    margin-top: 20px;
-  }
-  #claim-btn {
-    display: none;
-    background: #28a745;
-    color: white;
-  }
-</style>
+  }' />
+  <style>
+    body { margin: 0; background: #00BFFF; color: white; font-family: sans-serif; display:flex; flex-direction: column; align-items:center; justify-content:center; min-height:100vh; text-align:center;}
+    .choice-btn { padding:10px 20px; margin:10px; font-size:1.2rem; cursor:pointer; background:white; color:#00BFFF; border:none; border-radius:5px;}
+    #result { font-size:1.5rem; margin-top:20px;}
+    #reward-btn { display:none; padding:10px 20px; margin-top:10px; font-size:1.2rem; cursor:pointer; background:#28a745; color:white; border:none; border-radius:5px;}
+    #reward-btn.show { display:block; }
+  </style>
 </head>
 <body>
+  <h1>Rock Paper Scissors</h1>
+  <div id="game">
+    <button class="choice-btn" id="rock-btn">Rock 🪨</button>
+    <button class="choice-btn" id="paper-btn">Paper 📄</button>
+    <button class="choice-btn" id="scissors-btn">Scissors ✂️</button>
+    <div id="result"></div>
+    <button id="reward-btn">Claim Reward</button>
+  </div>
 
-<h1>Rock Paper Scissors</h1>
+  <script type="module">
+    import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
+    import contractData from './contract.json' assert { type: 'json' };
 
-<div id="game">
-  <button class="choice-btn" id="rock-btn">Rock 🪨</button>
-  <button class="choice-btn" id="paper-btn">Paper 📄</button>
-  <button class="choice-btn" id="scissors-btn">Scissors ✂️</button>
-  
-  <div id="result"></div>
-  
-  <button id="claim-btn">Claim $0.01 TIBBIR</button>
-  <div id="status"></div>
-</div>
+    let gameState = { choice: null, computerChoice: null, result: null };
+    let isSdkReady = false;
 
-<script type="module">
-import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
-import contractJson from './contract.json' assert { type: 'json' };
-import { ethers } from 'https://cdn.ethers.io/lib/ethers-6.13.0.esm.min.js';
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        await sdk.actions.ready();
+        console.log('SDK Ready - Mini App Loaded');
+        isSdkReady = true;
 
-let gameState = { choice: null, computerChoice: null, result: null };
-let provider, contract;
+        // Game buttons
+        document.getElementById('rock-btn').addEventListener('click', () => makeChoice('rock'));
+        document.getElementById('paper-btn').addEventListener('click', () => makeChoice('paper'));
+        document.getElementById('scissors-btn').addEventListener('click', () => makeChoice('scissors'));
 
-const rockBtn = document.getElementById('rock-btn');
-const paperBtn = document.getElementById('paper-btn');
-const scissorsBtn = document.getElementById('scissors-btn');
-const resultDiv = document.getElementById('result');
-const claimBtn = document.getElementById('claim-btn');
-const statusDiv = document.getElementById('status');
+        // Reward button
+        document.getElementById('reward-btn').addEventListener('click', claimReward);
 
-async function init() {
-  await sdk.actions.ready();
-  provider = await sdk.wallet.getEthereumProvider();
-  const signer = new ethers.BrowserProvider(provider).getSigner();
-  contract = new ethers.Contract(contractJson.address, contractJson.abi, signer);
+      } catch (error) {
+        console.error('SDK Initialization Error:', error);
+      }
+    });
 
-  // Game buttons
-  rockBtn.addEventListener('click', () => playGame('rock'));
-  paperBtn.addEventListener('click', () => playGame('paper'));
-  scissorsBtn.addEventListener('click', () => playGame('scissors'));
+    function makeChoice(playerChoice) {
+      if (!isSdkReady) return;
 
-  // Claim button
-  claimBtn.addEventListener('click', claimReward);
+      gameState.choice = playerChoice;
+      gameState.computerChoice = ['rock','paper','scissors'][Math.floor(Math.random()*3)];
 
-  checkCooldown();
-}
+      if (playerChoice === gameState.computerChoice) gameState.result = 'tie';
+      else if (
+        (playerChoice==='rock' && gameState.computerChoice==='scissors') ||
+        (playerChoice==='paper' && gameState.computerChoice==='rock') ||
+        (playerChoice==='scissors' && gameState.computerChoice==='paper')
+      ) gameState.result = 'win';
+      else gameState.result = 'lose';
 
-function playGame(playerChoice) {
-  gameState.choice = playerChoice;
-  gameState.computerChoice = ['rock','paper','scissors'][Math.floor(Math.random()*3)];
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerText = `You chose ${playerChoice}, Computer chose ${gameState.computerChoice}. Result: ${gameState.result}!`;
 
-  if(playerChoice === gameState.computerChoice) gameState.result = 'tie';
-  else if(
-    (playerChoice==='rock' && gameState.computerChoice==='scissors') ||
-    (playerChoice==='paper' && gameState.computerChoice==='rock') ||
-    (playerChoice==='scissors' && gameState.computerChoice==='paper')
-  ) gameState.result = 'win';
-  else gameState.result = 'lose';
-
-  resultDiv.innerText = `You chose ${playerChoice}, Computer chose ${gameState.computerChoice}. Result: ${gameState.result}!`;
-
-  // Show claim button only if player wins
-  claimBtn.style.display = gameState.result === 'win' ? 'inline-block' : 'none';
-  if(gameState.result !== 'win') statusDiv.innerText = '';
-  checkCooldown();
-}
-
-async function checkCooldown() {
-  try {
-    const accounts = await provider.request({ method: 'eth_accounts' });
-    const user = accounts[0];
-    const last = await contract.lastClaimed(user);
-    const cooldown = await contract.claimCooldown();
-    const now = Math.floor(Date.now()/1000);
-
-    if(now - last >= cooldown) {
-      claimBtn.disabled = false;
-      statusDiv.innerText = gameState.result === 'win' ? 'You can claim now!' : '';
-    } else {
-      claimBtn.disabled = true;
-      const remaining = cooldown - (now - last);
-      startTimer(remaining);
+      if(gameState.result==='win') checkCooldown();
+      else document.getElementById('reward-btn').classList.remove('show');
     }
-  } catch(e) {
-    console.error(e);
-  }
-}
 
-function startTimer(seconds) {
-  clearInterval(window.cooldownTimer);
-  window.cooldownTimer = setInterval(() => {
-    if(seconds <= 0) {
-      clearInterval(window.cooldownTimer);
-      statusDiv.innerText = 'You can claim now!';
-      claimBtn.disabled = false;
-      return;
+    async function checkCooldown() {
+      try {
+        const provider = await sdk.wallet.getEthereumProvider();
+        const contract = new ethers.Contract(contractData.address, contractData.abi, provider.getSigner());
+        const lastClaim = await contract.lastClaimed(await provider.request({ method: 'eth_accounts' })[0]);
+        const cooldown = await contract.claimCooldown();
+        const now = Math.floor(Date.now()/1000);
+
+        if(now - lastClaim >= cooldown) {
+          document.getElementById('reward-btn').classList.add('show');
+          document.getElementById('result').innerText += ' 🎉 You can claim now!';
+        } else {
+          const remaining = cooldown - (now - lastClaim);
+          document.getElementById('reward-btn').classList.remove('show');
+          startCooldownTimer(remaining);
+        }
+      } catch(e) {
+        console.error(e);
+      }
     }
-    const h = Math.floor(seconds/3600);
-    const m = Math.floor((seconds%3600)/60);
-    const s = seconds%60;
-    statusDiv.innerText = `Next claim in ${h}h ${m}m ${s}s`;
-    seconds--;
-  }, 1000);
-}
 
-async function claimReward() {
-  try {
-    claimBtn.disabled = true;
-    const tx = await contract.claimReward();
-    await tx.wait();
-    statusDiv.innerText = '🎉 Reward claimed! Next claim in 4h';
-    startTimer(4*3600);
-  } catch(e) {
-    console.error(e);
-    statusDiv.innerText = '❌ Claim failed: ' + (e.reason || e.message);
-    checkCooldown();
-  }
-}
+    function startCooldownTimer(seconds) {
+      const resultDiv = document.getElementById('result');
+      let remaining = seconds;
+      resultDiv.innerText += ` ⏳ Claim available in ${formatTime(remaining)}`;
+      const timer = setInterval(()=>{
+        remaining--;
+        resultDiv.innerText = `You won! ⏳ Claim available in ${formatTime(remaining)}`;
+        if(remaining<=0){
+          clearInterval(timer);
+          document.getElementById('reward-btn').classList.add('show');
+          resultDiv.innerText = `🎉 You can claim your reward now!`;
+        }
+      },1000);
+    }
 
-init();
-</script>
+    function formatTime(sec){
+      const h = Math.floor(sec/3600);
+      const m = Math.floor((sec%3600)/60);
+      const s = sec%60;
+      return `${h}h ${m}m ${s}s`;
+    }
+
+    async function claimReward() {
+      try {
+        const provider = await sdk.wallet.getEthereumProvider();
+        const accounts = await provider.request({ method: 'eth_accounts' });
+        const from = accounts[0];
+        const contract = new ethers.Contract(contractData.address, contractData.abi, provider.getSigner());
+
+        const tx = await contract.claimReward({ from });
+        document.getElementById('reward-btn').classList.remove('show');
+        document.getElementById('result').innerText += ` 🎉 Claimed reward! TX: ${tx.hash}`;
+
+      } catch (error) {
+        console.error('TX Error:', error);
+        document.getElementById('result').innerText += ' ❌ Reward claim failed. ' + (error.message || '');
+      }
+    }
+  </script>
+
+  <!-- Ethers.js 6.13.0 -->
+  <script type="module" src="https://cdn.jsdelivr.net/npm/ethers@6.13.0/dist/ethers.min.js"></script>
 </body>
 </html>
