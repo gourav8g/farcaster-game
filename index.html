@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rock Paper Scissors</title>
+  <title>Rock Paper Scissors Mini App</title>
 
   <meta name="fc:miniapp" content='{
     "version": "1",
@@ -12,8 +12,8 @@
       "title": "Play Now",
       "action": {
         "type": "launch_frame",
-        "name": "RPSRewardApp",
-        "url": "https://your-miniapp-url.netlify.app/",
+        "name": "RockPaperScissors",
+        "url": "https://farcaster-game.netlify.app/",
         "splashImageUrl": "https://farcaster-game.netlify.app/splash.png",
         "splashBackgroundColor": "#00BFFF"
       }
@@ -21,106 +21,104 @@
   }' />
 
   <style>
-    body { margin:0; font-family:sans-serif; background:#00BFFF; color:white; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; text-align:center; }
-    h1 { margin-bottom:20px; }
-    .choice-btn { padding:10px 20px; margin:10px; font-size:1.2rem; cursor:pointer; background:white; color:#00BFFF; border:none; border-radius:5px; }
-    #reward-btn { display:none; padding:12px 20px; font-size:1.2rem; cursor:pointer; background:#28a745; color:white; border:none; border-radius:5px; margin-top:15px; }
-    #status { margin-top:20px; font-size:1.2rem; }
+    body { margin: 0; background: #00BFFF; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; text-align: center; }
+    .choice-btn { padding: 10px 20px; margin: 10px; font-size: 1.2rem; cursor: pointer; background: white; color: #00BFFF; border: none; border-radius: 5px; }
+    #result { font-size: 1.5rem; margin-top: 20px; }
+    #reward-btn { display: none; padding: 10px 20px; margin-top: 10px; font-size: 1.2rem; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 5px; }
+    #reward-btn.show { display: block; }
   </style>
 </head>
 <body>
-  <h1>Rock Paper Scissors + Reward</h1>
+  <h1>Rock Paper Scissors</h1>
   <div id="game">
     <button class="choice-btn" id="rock-btn">Rock 🪨</button>
     <button class="choice-btn" id="paper-btn">Paper 📄</button>
     <button class="choice-btn" id="scissors-btn">Scissors ✂️</button>
-    <div id="status"></div>
-    <button id="reward-btn">Claim 0.01 TIBBIR</button>
+    <div id="result"></div>
+    <button id="reward-btn">Claim Reward</button>
   </div>
 
   <script type="module">
     import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
-    import { ethers } from "https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.0/ethers.min.js";
+    import { ethers } from "https://cdn.jsdelivr.net/npm/ethers@6.13.0/dist/ethers.min.js";
 
-    const statusDiv = document.getElementById('status');
-    const rewardBtn = document.getElementById('reward-btn');
-    const choices = ['rock','paper','scissors'];
-    let gameState = { player:null, computer:null, result:null };
+    let gameState = { choice: null, computerChoice: null, result: null };
     let isSdkReady = false;
 
-    // Load contract.json
-    const contractData = await fetch('contract.json').then(r => r.json());
-    const provider = await sdk.wallet.getEthereumProvider();
-    const signer = new ethers.providers.Web3Provider(provider).getSigner();
-    const contract = new ethers.Contract(contractData.address, contractData.abi, signer);
+    // Contract data
+    const contractData = {
+      address: '0x4f4b5897dd0a2e69577e92ffb8f25a6a6012110c',
+      abi: [
+        {
+          "inputs": [],
+          "name": "claimReward",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        }
+      ]
+    };
 
     document.addEventListener('DOMContentLoaded', async () => {
       try {
         await sdk.actions.ready();
+        console.log('SDK Ready - Mini App Loaded');
         isSdkReady = true;
-        statusDiv.innerText = "Choose Rock, Paper or Scissors to play!";
 
         // Game buttons
-        document.getElementById('rock-btn').addEventListener('click', () => play('rock'));
-        document.getElementById('paper-btn').addEventListener('click', () => play('paper'));
-        document.getElementById('scissors-btn').addEventListener('click', () => play('scissors'));
+        document.getElementById('rock-btn').addEventListener('click', () => makeChoice('rock'));
+        document.getElementById('paper-btn').addEventListener('click', () => makeChoice('paper'));
+        document.getElementById('scissors-btn').addEventListener('click', () => makeChoice('scissors'));
 
         // Reward button
-        rewardBtn.addEventListener('click', claimReward);
+        document.getElementById('reward-btn').addEventListener('click', claimReward);
 
-      } catch(e) {
-        statusDiv.innerText = 'SDK Initialization failed: ' + e.message;
+      } catch (error) {
+        console.error('SDK Initialization Error:', error);
       }
     });
 
-    function play(playerChoice){
-      if(!isSdkReady) return;
+    function makeChoice(playerChoice) {
+      if (!isSdkReady) return;
 
-      const computerChoice = choices[Math.floor(Math.random()*3)];
-      gameState.player = playerChoice;
-      gameState.computer = computerChoice;
+      gameState.choice = playerChoice;
+      gameState.computerChoice = ['rock','paper','scissors'][Math.floor(Math.random()*3)];
 
-      if(playerChoice === computerChoice) gameState.result = 'tie';
-      else if(
-        (playerChoice==='rock' && computerChoice==='scissors') ||
-        (playerChoice==='paper' && computerChoice==='rock') ||
-        (playerChoice==='scissors' && computerChoice==='paper')
+      if (playerChoice === gameState.computerChoice) gameState.result = 'tie';
+      else if (
+        (playerChoice==='rock' && gameState.computerChoice==='scissors') ||
+        (playerChoice==='paper' && gameState.computerChoice==='rock') ||
+        (playerChoice==='scissors' && gameState.computerChoice==='paper')
       ) gameState.result = 'win';
       else gameState.result = 'lose';
 
-      statusDiv.innerText = `You chose ${playerChoice}, Computer chose ${computerChoice}. Result: ${gameState.result}!`;
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerText = `You chose ${playerChoice}, Computer chose ${gameState.computerChoice}. Result: ${gameState.result}!`;
 
-      if(gameState.result==='win') rewardBtn.style.display = 'block';
-      else rewardBtn.style.display = 'none';
+      if(gameState.result==='win') document.getElementById('reward-btn').classList.add('show');
+      else document.getElementById('reward-btn').classList.remove('show');
     }
 
-    async function claimReward(){
-      if(!isSdkReady) return;
-      rewardBtn.disabled = true;
-
+    async function claimReward() {
       try {
-        const userAddress = await signer.getAddress();
-        const lastClaimed = await contract.lastClaimed(userAddress);
-        const cooldown = await contract.claimCooldown();
-        const now = Math.floor(Date.now() / 1000);
+        if(!isSdkReady) throw new Error('SDK not ready');
 
-        if(now - lastClaimed.toNumber() < cooldown.toNumber()){
-          const remaining = cooldown.toNumber() - (now - lastClaimed.toNumber());
-          statusDiv.innerText = `⏳ Wait ${remaining} seconds before claiming again.`;
-          rewardBtn.disabled = false;
-          return;
-        }
+        const provider = await sdk.wallet.getEthereumProvider();
+        if(!provider) throw new Error('Ethereum provider not available');
 
+        // Ethers v6 BrowserProvider
+        const browserProvider = new ethers.BrowserProvider(provider);
+        const signer = await browserProvider.getSigner();
+
+        const contract = new ethers.Contract(contractData.address, contractData.abi, signer);
         const tx = await contract.claimReward();
-        statusDiv.innerText = '⏳ Transaction submitted...';
-        await tx.wait();
-        statusDiv.innerText = '🎉 Reward claimed successfully!';
-        rewardBtn.style.display = 'none';
-      } catch(err){
-        console.error(err);
-        statusDiv.innerText = '❌ Claim failed: ' + (err.message || err);
-      } finally {
-        rewardBtn.disabled = false;
+
+        document.getElementById('reward-btn').classList.remove('show');
+        document.getElementById('result').innerText += ` 🎉 Claimed reward! TX: ${tx.hash}`;
+
+      } catch (error) {
+        console.error('TX Error:', error);
+        document.getElementById('result').innerText += ' ❌ Reward claim failed. ' + (error.message || '');
       }
     }
   </script>
