@@ -82,7 +82,7 @@
 
     const CONTRACT_ADDRESS = "0x99407dc640bdb6853d1c706a7122d85cbffce935"; 
     const CLAIM_REWARD_SELECTOR = "0x379607f5"; // claimReward() function selector
-    const BASE_CHAIN = "eip155:8453"; // Base chain in CAIP-2 format
+    const BASE_CHAIN_ID = "0x2131"; // Hex for 8453 (Base chain)
 
     document.addEventListener("DOMContentLoaded", async () => {
       try {
@@ -131,12 +131,30 @@
     async function claimReward() {
       try {
         if (!isSdkReady) throw new Error("SDK not ready yet");
+        if (!window.ethereum) throw new Error("Please install MetaMask or connect a wallet.");
 
-        // Send transaction via Farcaster embedded wallet
-        const txHash = await sdk.wallet.sendTransaction({
-          chainId: BASE_CHAIN,
+        // Get current chainId from MetaMask
+        const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
+
+        if (currentChainId !== BASE_CHAIN_ID) {
+          throw new Error('Please switch to Base network in MetaMask (Chain ID 8453).');
+        }
+
+        // Request accounts from MetaMask
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const recipientAddress = accounts[0]; // User's address
+
+        // Encode the claimReward function call
+        const tx = {
           to: CONTRACT_ADDRESS,
-          data: CLAIM_REWARD_SELECTOR
+          data: CLAIM_REWARD_SELECTOR, // Function selector for claimReward()
+          chainId: BASE_CHAIN_ID, // Use Base chain ID
+          from: recipientAddress // Sender's address
+        };
+
+        const txHash = await window.ethereum.request({
+          method: 'eth_sendTransaction',
+          params: [tx]
         });
 
         document.getElementById("reward-btn").classList.remove("show");
