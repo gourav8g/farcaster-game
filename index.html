@@ -43,10 +43,7 @@
       border: none;
       border-radius: 5px;
     }
-    #result {
-      font-size: 1.5rem;
-      margin-top: 20px;
-    }
+    #result { font-size: 1.5rem; margin-top: 20px; }
     #reward-btn {
       display: none;
       padding: 10px 20px;
@@ -58,14 +55,8 @@
       border: none;
       border-radius: 5px;
     }
-    #reward-btn.show {
-      display: block;
-    }
-    #timer {
-      margin-top: 10px;
-      font-size: 1.2rem;
-      color: #ffd700;
-    }
+    #reward-btn.show { display: block; }
+    #cooldown { margin-top: 10px; font-size: 1rem; color: #FFD700; }
   </style>
 </head>
 <body>
@@ -76,28 +67,30 @@
     <button class="choice-btn" id="scissors-btn">Scissors ✂️</button>
     <div id="result"></div>
     <button id="reward-btn">Claim Reward</button>
-    <div id="timer"></div>
+    <div id="cooldown"></div>
   </div>
 
-  <script type="module">
-    import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
-    import { ethers } from 'https://cdn.jsdelivr.net/npm/ethers@6.13.0/dist/ethers.esm.min.js';
+  <!-- Ethers.js v6 -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.6.0/dist/ethers.umd.min.js"></script>
+  <!-- Farcaster Mini App SDK -->
+  <script src="https://esm.sh/@farcaster/miniapp-sdk"></script>
 
+  <script>
+    const { sdk } = window;
     let gameState = { choice: null, computerChoice: null, result: null };
     let isSdkReady = false;
     let contractData = null;
-    let lastClaimTime = 0;
-    const CLAIM_INTERVAL = 4 * 60 * 60 * 1000; // 4 hours in ms
+    let rewardContract = null;
+    const cooldownSeconds = 4 * 60 * 60; // 4 hours
+    let lastClaim = 0;
+    let cooldownInterval = null;
 
-    const resultDiv = document.getElementById('result');
-    const rewardBtn = document.getElementById('reward-btn');
-    const timerDiv = document.getElementById('timer');
-
-    // Load contract.json
-    fetch('./contract.json')
-      .then(res => res.json())
-      .then(data => { contractData = data; })
-      .catch(err => console.error('Contract JSON load error:', err));
+    async function initContract() {
+      contractData = await fetch('contract.json').then(res => res.json());
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      rewardContract = new ethers.Contract(contractData.address, contractData.abi, signer);
+    }
 
     document.addEventListener('DOMContentLoaded', async () => {
       try {
@@ -105,19 +98,19 @@
         console.log('SDK Ready - Mini App Loaded');
         isSdkReady = true;
 
-        // Game buttons
         document.getElementById('rock-btn').addEventListener('click', () => makeChoice('rock'));
         document.getElementById('paper-btn').addEventListener('click', () => makeChoice('paper'));
         document.getElementById('scissors-btn').addEventListener('click', () => makeChoice('scissors'));
+        document.getElementById('reward-btn').addEventListener('click', claimReward);
 
-        // Reward button
-        rewardBtn.addEventListener('click', claimReward);
+        // Load last claim from localStorage
+        const stored = localStorage.getItem('lastClaim');
+        if(stored) lastClaim = parseInt(stored);
 
-        updateTimer();
-        setInterval(updateTimer, 1000);
-
+        await initContract();
+        updateCooldown();
       } catch (error) {
-        console.error('SDK Initialization Error:', error);
+        console.error('Initialization Error:', error);
       }
     });
 
@@ -135,58 +128,55 @@
       ) gameState.result = 'win';
       else gameState.result = 'lose';
 
+      const resultDiv = document.getElementById('result');
       resultDiv.innerText = `You chose ${playerChoice}, Computer chose ${gameState.computerChoice}. Result: ${gameState.result}!`;
 
-      if(gameState.result==='win' && canClaim()) rewardBtn.classList.add('show');
-      else rewardBtn.classList.remove('show');
+      if(gameState.result==='win' && canClaimReward()) document.getElementById('reward-btn').classList.add('show');
+      else document.getElementById('reward-btn').classList.remove('show');
     }
 
-    function canClaim() {
-      const now = Date.now();
-      return now - lastClaimTime >= CLAIM_INTERVAL;
+    function canClaimReward() {
+      const now = Math.floor(Date.now()/1000);
+      return now - lastClaim >= cooldownSeconds;
     }
 
-    function updateTimer() {
-      if(canClaim()) {
-        timerDiv.innerText = 'You can claim your reward now!';
-        if(gameState.result==='win') rewardBtn.classList.add('show');
-      } else {
-        const remaining = CLAIM_INTERVAL - (Date.now() - lastClaimTime);
-        const hours = Math.floor(remaining / 3600000);
-        const minutes = Math.floor((remaining % 3600000) / 60000);
-        const seconds = Math.floor((remaining % 60000) / 1000);
-        timerDiv.innerText = `Next claim in ${hours}h ${minutes}m ${seconds}s`;
-        rewardBtn.classList.remove('show');
-      }
+    function updateCooldown() {
+      clearInterval(cooldownInterval);
+      const cooldownDiv = document.getElementById('cooldown');
+
+      cooldownInterval = setInterval(() => {
+        const now = Math.floor(Date.now()/1000);
+        const remaining = cooldownSeconds - (now - lastClaim);
+        if(remaining > 0) {
+          const h = Math.floor(remaining/3600);
+          const m = Math.floor((remaining%3600)/60);
+          const s = remaining%60;
+          cooldownDiv.innerText = `Next claim available in ${h}h ${m}m ${s}s`;
+          document.getElementById('reward-btn').classList.remove('show');
+        } else {
+          cooldownDiv.innerText = '';
+          if(gameState.result==='win') document.getElementById('reward-btn').classList.add('show');
+          clearInterval(cooldownInterval);
+        }
+      }, 1000);
     }
 
     async function claimReward() {
       try {
         if(!isSdkReady) throw new Error('SDK not ready');
-        if(!contractData) throw new Error('Contract data not loaded');
+        if(!canClaimReward()) throw new Error('Cooldown active. Please wait.');
 
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        if(!provider) throw new Error('Ethereum provider not available');
+        const txResponse = await rewardContract.claimReward();
 
-        const accounts = await provider.request({ method: 'eth_accounts' });
-        const from = accounts[0];
+        lastClaim = Math.floor(Date.now()/1000);
+        localStorage.setItem('lastClaim', lastClaim);
+        updateCooldown();
 
-        const tx = {
-          to: contractData.address,
-          data: contractData.claimRewardSelector,
-          from
-        };
-
-        const txHash = await provider.request({ method: 'eth_sendTransaction', params: [tx] });
-
-        lastClaimTime = Date.now();
-        rewardBtn.classList.remove('show');
-        resultDiv.innerText += ` 🎉 Claimed reward! TX: ${txHash}`;
-        updateTimer();
-
+        document.getElementById('reward-btn').classList.remove('show');
+        document.getElementById('result').innerText += ` 🎉 Claimed reward! TX: ${txResponse.hash}`;
       } catch (error) {
         console.error('TX Error:', error);
-        resultDiv.innerText += ' ❌ Reward claim failed. ' + (error.message || '');
+        document.getElementById('result').innerText += ' ❌ Reward claim failed. ' + (error.message || '');
       }
     }
   </script>
