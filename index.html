@@ -80,8 +80,8 @@
   </div>
 
   <script type="module">
-    import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk@1.0.0';
-    import { ethers } from 'https://cdn.jsdelivr.net/npm/ethers@6.13.0/dist/ethers.esm.min.js';
+    import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
+    import { ethers } from 'https://cdn.jsdelivr.net/npm/ethers@6.13.0/dist/ethers.umd.min.js';
 
     let gameState = { choice: null, computerChoice: null, result: null };
     let isSdkReady = false;
@@ -165,7 +165,7 @@
         if(!isSdkReady) throw new Error('SDK not ready');
         if(!contractData) throw new Error('Contract data not loaded');
 
-        const provider = await sdk.wallet.getEthereumProvider();
+        const provider = new ethers.BrowserProvider(window.ethereum);
         if(!provider) throw new Error('Ethereum provider not available');
 
         const accounts = await provider.request({ method: 'eth_accounts' });
