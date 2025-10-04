@@ -134,29 +134,28 @@
     }
 
     async function claimReward() {
-      try {
-        if(!isSdkReady) throw new Error('SDK not ready');
+  try {
+    if (!isSdkReady) throw new Error("SDK not ready");
 
-        const provider = await sdk.wallet.getEthereumProvider();
-        if(!provider) throw new Error('Ethereum provider not available');
+    const provider = await sdk.wallet.getEthereumProvider();
+    if (!provider) throw new Error("Ethereum provider not available");
 
-        const accounts = await provider.request({ method: 'eth_accounts' });
-        const from = accounts[0];
+    const accounts = await provider.request({ method: "eth_accounts" });
+    const from = accounts[0];
 
-        const iface = new ethers.Interface(contractABI);
-        const data = iface.encodeFunctionData('claimReward');
+    // Using ethers Interface from contract.json
+    const contract = new ethers.Contract(contractData.address, contractData.abi, provider.getSigner());
 
-        const tx = { to: contractData.address, data, from };
+    const tx = await contract.claimReward(); // simple call
+    await tx.wait();
 
-        const txHash = await provider.request({ method: 'eth_sendTransaction', params: [tx] });
-
-        document.getElementById('reward-btn').classList.remove('show');
-        document.getElementById('result').innerText += ` 🎉 Claimed reward! TX: ${txHash}`;
-      } catch (error) {
-        console.error('TX Error:', error);
-        document.getElementById('result').innerText += ' ❌ Reward claim failed. ' + (error.message || '');
-      }
-    }
+    document.getElementById("reward-btn").classList.remove("show");
+    document.getElementById("result").innerText += ` 🎉 Claimed reward! TX: ${tx.hash}`;
+  } catch (error) {
+    console.error("TX Error:", error);
+    document.getElementById("result").innerText += " ❌ Reward claim failed. " + (error.message || "");
+  }
+}
   </script>
 </body>
 </html>
