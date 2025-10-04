@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rock Paper Scissors Mini App</title>
 
   <meta name="fc:miniapp" content='{
@@ -18,7 +18,7 @@
         "splashBackgroundColor": "#00BFFF"
       }
     }
-  }' />
+  }'>
 
   <style>
     body {
@@ -43,7 +43,10 @@
       border: none;
       border-radius: 5px;
     }
-    #result { font-size: 1.5rem; margin-top: 20px; }
+    #result {
+      font-size: 1.5rem;
+      margin-top: 20px;
+    }
     #reward-btn {
       display: none;
       padding: 10px 20px;
@@ -56,7 +59,11 @@
       border-radius: 5px;
     }
     #reward-btn.show { display: block; }
-    #cooldown { margin-top: 10px; font-size: 1rem; color: #FFD700; }
+    #cooldown {
+      margin-top: 10px;
+      font-size: 1rem;
+      color: #FFD700;
+    }
   </style>
 </head>
 <body>
@@ -70,58 +77,49 @@
     <div id="cooldown"></div>
   </div>
 
-  <!-- Ethers.js v6 -->
-  <script src="https://cdn.jsdelivr.net/npm/ethers@6.6.0/dist/ethers.umd.min.js"></script>
-  <!-- Farcaster Mini App SDK -->
-  <script src="https://esm.sh/@farcaster/miniapp-sdk"></script>
+  <!-- Module Scripts -->
+  <script type="module">
+    import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
+    import { ethers } from 'https://cdn.jsdelivr.net/npm/ethers@6.6.0/dist/ethers.esm.min.js';
+    import contractData from './contract.json' assert { type: 'json' };
 
-  <script>
-    const { sdk } = window;
     let gameState = { choice: null, computerChoice: null, result: null };
     let isSdkReady = false;
-    let contractData = null;
-    let rewardContract = null;
-    const cooldownSeconds = 4 * 60 * 60; // 4 hours
     let lastClaim = 0;
+    const cooldownSeconds = 4 * 60 * 60; // 4 hours
     let cooldownInterval = null;
-
-    async function initContract() {
-      contractData = await fetch('contract.json').then(res => res.json());
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      rewardContract = new ethers.Contract(contractData.address, contractData.abi, signer);
-    }
 
     document.addEventListener('DOMContentLoaded', async () => {
       try {
         await sdk.actions.ready();
-        console.log('SDK Ready - Mini App Loaded');
+        console.log('SDK Ready');
         isSdkReady = true;
 
+        // Game buttons
         document.getElementById('rock-btn').addEventListener('click', () => makeChoice('rock'));
         document.getElementById('paper-btn').addEventListener('click', () => makeChoice('paper'));
         document.getElementById('scissors-btn').addEventListener('click', () => makeChoice('scissors'));
+
         document.getElementById('reward-btn').addEventListener('click', claimReward);
 
         // Load last claim from localStorage
         const stored = localStorage.getItem('lastClaim');
         if(stored) lastClaim = parseInt(stored);
-
-        await initContract();
         updateCooldown();
+
       } catch (error) {
-        console.error('Initialization Error:', error);
+        console.error('SDK Initialization Error:', error);
       }
     });
 
     function makeChoice(playerChoice) {
-      if (!isSdkReady) return;
+      if(!isSdkReady) return;
 
       gameState.choice = playerChoice;
       gameState.computerChoice = ['rock','paper','scissors'][Math.floor(Math.random()*3)];
 
-      if (playerChoice === gameState.computerChoice) gameState.result = 'tie';
-      else if (
+      if(playerChoice === gameState.computerChoice) gameState.result = 'tie';
+      else if(
         (playerChoice==='rock' && gameState.computerChoice==='scissors') ||
         (playerChoice==='paper' && gameState.computerChoice==='rock') ||
         (playerChoice==='scissors' && gameState.computerChoice==='paper')
@@ -131,8 +129,11 @@
       const resultDiv = document.getElementById('result');
       resultDiv.innerText = `You chose ${playerChoice}, Computer chose ${gameState.computerChoice}. Result: ${gameState.result}!`;
 
-      if(gameState.result==='win' && canClaimReward()) document.getElementById('reward-btn').classList.add('show');
-      else document.getElementById('reward-btn').classList.remove('show');
+      if(gameState.result==='win' && canClaimReward()) {
+        document.getElementById('reward-btn').classList.add('show');
+      } else {
+        document.getElementById('reward-btn').classList.remove('show');
+      }
     }
 
     function canClaimReward() {
@@ -166,19 +167,28 @@
         if(!isSdkReady) throw new Error('SDK not ready');
         if(!canClaimReward()) throw new Error('Cooldown active. Please wait.');
 
-        const txResponse = await rewardContract.claimReward();
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
 
+        const contract = new ethers.Contract(
+          contractData.address,
+          contractData.abi,
+          signer
+        );
+
+        const txResponse = await contract.claimReward();
         lastClaim = Math.floor(Date.now()/1000);
         localStorage.setItem('lastClaim', lastClaim);
         updateCooldown();
 
         document.getElementById('reward-btn').classList.remove('show');
         document.getElementById('result').innerText += ` 🎉 Claimed reward! TX: ${txResponse.hash}`;
-      } catch (error) {
-        console.error('TX Error:', error);
-        document.getElementById('result').innerText += ' ❌ Reward claim failed. ' + (error.message || '');
+      } catch (err) {
+        console.error('TX Error:', err);
+        document.getElementById('result').innerText += ' ❌ Reward claim failed. ' + (err.message || '');
       }
     }
+
   </script>
 </body>
 </html>
